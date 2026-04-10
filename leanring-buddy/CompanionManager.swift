@@ -174,6 +174,71 @@ final class CompanionManager: ObservableObject {
         UserDefaults.standard.set(mode, forKey: "selectedInteractionMode")
     }
 
+    // MARK: - Subtitles (Lyrics-style trailing text)
+
+    /// Whether to show lyrics-style subtitles near the cursor during TTS playback.
+    @Published var showSubtitles: Bool = UserDefaults.standard.object(forKey: "showSubtitles") == nil
+        ? true
+        : UserDefaults.standard.bool(forKey: "showSubtitles")
+
+    /// The current 3-word subtitle chunk displayed near the cursor.
+    @Published var currentSubtitleText: String = ""
+
+    private var subtitleTimer: Timer?
+    private var subtitleWordGroups: [String] = []
+    private var subtitleGroupIndex: Int = 0
+
+    func setShowSubtitles(_ show: Bool) {
+        showSubtitles = show
+        UserDefaults.standard.set(show, forKey: "showSubtitles")
+        if !show {
+            stopSubtitles()
+        }
+    }
+
+    /// Starts cycling through 3-word subtitle groups synced to TTS duration.
+    func startSubtitles(for text: String) {
+        guard showSubtitles else { return }
+        stopSubtitles()
+
+        let words = text.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+        guard !words.isEmpty else { return }
+
+        // Group into chunks of 3 words
+        subtitleWordGroups = stride(from: 0, to: words.count, by: 3).map { startIndex in
+            let endIndex = min(startIndex + 3, words.count)
+            return words[startIndex..<endIndex].joined(separator: " ")
+        }
+        subtitleGroupIndex = 0
+
+        // Estimate total speech duration (~0.06s per character at rate 0.48)
+        let estimatedDuration = Double(text.count) * 0.06
+        let interval = max(0.3, estimatedDuration / Double(subtitleWordGroups.count))
+
+        // Show first group immediately
+        currentSubtitleText = subtitleWordGroups[0]
+
+        subtitleTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                self.subtitleGroupIndex += 1
+                if self.subtitleGroupIndex < self.subtitleWordGroups.count {
+                    self.currentSubtitleText = self.subtitleWordGroups[self.subtitleGroupIndex]
+                } else {
+                    self.stopSubtitles()
+                }
+            }
+        }
+    }
+
+    func stopSubtitles() {
+        subtitleTimer?.invalidate()
+        subtitleTimer = nil
+        currentSubtitleText = ""
+        subtitleWordGroups = []
+        subtitleGroupIndex = 0
+    }
+
     /// User preference for whether the Clicky cursor should be shown.
     /// When toggled off, the overlay is hidden and push-to-talk is disabled.
     /// Persisted to UserDefaults so the choice survives app restarts.
@@ -816,6 +881,7 @@ final class CompanionManager: ObservableObject {
                         }
                         // speakText returns after player.play() — audio is now playing
                         voiceState = .responding
+                        startSubtitles(for: spokenText)
                     } catch {
                         ClickyAnalytics.trackTTSError(error: error.localizedDescription)
                         print("⚠️ TTS error: \(error)")
@@ -831,6 +897,7 @@ final class CompanionManager: ObservableObject {
             }
 
             if !Task.isCancelled {
+                stopSubtitles()
                 voiceState = .idle
                 scheduleTransientHideIfNeeded()
             }

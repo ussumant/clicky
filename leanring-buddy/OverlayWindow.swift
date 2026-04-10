@@ -336,6 +336,25 @@ struct BlueCursorView: View {
                 .animation(.spring(response: 0.2, dampingFraction: 0.6, blendDuration: 0), value: cursorPosition)
                 .animation(.easeIn(duration: 0.15), value: companionManager.voiceState)
 
+            // Lyrics-style subtitle — shows 3 words at a time during TTS playback
+            if isCursorOnThisScreen && !companionManager.currentSubtitleText.isEmpty {
+                Text(companionManager.currentSubtitleText)
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.9))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(Color.black.opacity(0.5))
+                    )
+                    .fixedSize()
+                    .position(x: cursorPosition.x + 10, y: cursorPosition.y + 40)
+                    .animation(.spring(response: 0.2, dampingFraction: 0.6, blendDuration: 0), value: cursorPosition)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    .animation(.easeInOut(duration: 0.2), value: companionManager.currentSubtitleText)
+                    .id(companionManager.currentSubtitleText)
+            }
+
         }
         .frame(width: screenFrame.width, height: screenFrame.height)
         .ignoresSafeArea()

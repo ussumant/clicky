@@ -1,0 +1,81 @@
+{
+  "version": 2,
+  "mode": "codebase",
+  "name": "Clicky",
+  "sources": [
+    { "path": "./", "exclude": ["node_modules/", "dist/", ".git/", "wiki/", ".build/", "leanring-buddy.xcodeproj/", "leanring-buddyTests/", "leanring-buddyUITests/", "Assets.xcassets/"] }
+  ],
+  "output": "wiki/",
+  "service_discovery": "auto",
+  "knowledge_files": [
+    "README.md", "CLAUDE.md", "AGENTS.md",
+    "leanring-buddy/AGENTS.md", "scripts/README.md",
+    "worker/wrangler.toml", "worker/package.json",
+    "leanring-buddy/Info.plist", "leanring-buddy/leanring-buddy.entitlements",
+    "appcast.xml", "LICENSE"
+  ],
+  "deep_scan": false,
+  "auto_update": "prompt",
+  "topic_hints": [
+    {
+      "name": "companion-engine",
+      "description": "Core state machine, app lifecycle, screen capture, and analytics",
+      "files": [
+        "leanring-buddy/CompanionManager.swift",
+        "leanring-buddy/leanring_buddyApp.swift",
+        "leanring-buddy/AppBundleConfiguration.swift",
+        "leanring-buddy/CompanionScreenCaptureUtility.swift",
+        "leanring-buddy/ClickyAnalytics.swift"
+      ]
+    },
+    {
+      "name": "voice-and-transcription",
+      "description": "Push-to-talk mic capture, audio conversion, and pluggable transcription providers (AssemblyAI, OpenAI, Apple Speech)",
+      "files": [
+        "leanring-buddy/BuddyDictationManager.swift",
+        "leanring-buddy/BuddyTranscriptionProvider.swift",
+        "leanring-buddy/AssemblyAIStreamingTranscriptionProvider.swift",
+        "leanring-buddy/OpenAIAudioTranscriptionProvider.swift",
+        "leanring-buddy/AppleSpeechTranscriptionProvider.swift",
+        "leanring-buddy/BuddyAudioConversionSupport.swift",
+        "leanring-buddy/GlobalPushToTalkShortcutMonitor.swift"
+      ]
+    },
+    {
+      "name": "ai-response-and-overlay",
+      "description": "Claude/OpenAI chat, ElevenLabs TTS, cursor overlay, element pointing, menu bar panel, and all UI",
+      "files": [
+        "leanring-buddy/ClaudeAPI.swift",
+        "leanring-buddy/OpenAIAPI.swift",
+        "leanring-buddy/ElevenLabsTTSClient.swift",
+        "leanring-buddy/ElementLocationDetector.swift",
+        "leanring-buddy/OverlayWindow.swift",
+        "leanring-buddy/CompanionResponseOverlay.swift",
+        "leanring-buddy/CompanionPanelView.swift",
+        "leanring-buddy/MenuBarPanelManager.swift",
+        "leanring-buddy/DesignSystem.swift",
+        "leanring-buddy/WindowPositionManager.swift"
+      ]
+    },
+    {
+      "name": "worker-proxy",
+      "description": "Cloudflare Worker API proxy holding secrets and routing to Claude, ElevenLabs, and AssemblyAI",
+      "files": [
+        "worker/src/index.ts",
+        "worker/wrangler.toml",
+        "worker/package.json"
+      ]
+    }
+  ],
+  "article_sections": [
+    { "name": "Purpose", "description": "What this module/service does and who depends on it", "required": true },
+    { "name": "Architecture", "description": "Key files, structure, entry points" },
+    { "name": "Talks To", "description": "Dependencies, communication patterns, inter-service calls" },
+    { "name": "API Surface", "description": "Endpoints, exported functions, or interfaces exposed" },
+    { "name": "Data", "description": "Tables, collections, queues, caches, state owned" },
+    { "name": "Key Decisions", "description": "Why it was built this way, from ADRs and READMEs" },
+    { "name": "Gotchas", "description": "Known issues, edge cases, failure modes" },
+    { "name": "Sources", "description": "Backlinks to all contributing files", "required": true }
+  ],
+  "link_style": "markdown"
+}

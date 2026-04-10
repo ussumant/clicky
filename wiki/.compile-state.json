@@ -1,0 +1,32 @@
+{
+  "last_compiled": "2026-04-10",
+  "topics": ["companion-engine", "voice-and-transcription", "ai-response-and-overlay", "worker-proxy"],
+  "source_locations": [
+    "leanring-buddy/leanring_buddyApp.swift",
+    "leanring-buddy/CompanionManager.swift",
+    "leanring-buddy/CompanionScreenCaptureUtility.swift",
+    "leanring-buddy/ClickyAnalytics.swift",
+    "leanring-buddy/AppBundleConfiguration.swift",
+    "leanring-buddy/BuddyDictationManager.swift",
+    "leanring-buddy/BuddyTranscriptionProvider.swift",
+    "leanring-buddy/AssemblyAIStreamingTranscriptionProvider.swift",
+    "leanring-buddy/OpenAIAudioTranscriptionProvider.swift",
+    "leanring-buddy/AppleSpeechTranscriptionProvider.swift",
+    "leanring-buddy/BuddyAudioConversionSupport.swift",
+    "leanring-buddy/GlobalPushToTalkShortcutMonitor.swift",
+    "leanring-buddy/ClaudeAPI.swift",
+    "leanring-buddy/OpenAIAPI.swift",
+    "leanring-buddy/ElevenLabsTTSClient.swift",
+    "leanring-buddy/ElementLocationDetector.swift",
+    "leanring-buddy/OverlayWindow.swift",
+    "leanring-buddy/CompanionResponseOverlay.swift",
+    "leanring-buddy/CompanionPanelView.swift",
+    "leanring-buddy/MenuBarPanelManager.swift",
+    "leanring-buddy/DesignSystem.swift",
+    "leanring-buddy/WindowPositionManager.swift",
+    "worker/src/index.ts",
+    "worker/wrangler.toml",
+    "worker/package.json"
+  ],
+  "total_sources_scanned": 25
+}
