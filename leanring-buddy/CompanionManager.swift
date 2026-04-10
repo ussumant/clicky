@@ -110,10 +110,68 @@ final class CompanionManager: ObservableObject {
     /// The Claude model used for voice responses. Persisted to UserDefaults.
     @Published var selectedModel: String = UserDefaults.standard.string(forKey: "selectedClaudeModel") ?? "claude-sonnet-4-6"
 
+    /// The chat backend: "api" (Cloudflare Worker → Anthropic API) or "cli"
+    /// (local Claude Code CLI → user's subscription). Persisted to UserDefaults.
+    @Published var selectedBackend: String = UserDefaults.standard.string(forKey: "selectedChatBackend") ?? "api"
+
+    /// Whether the Claude CLI binary is installed and reachable on this machine.
+    var isCLIBackendAvailable: Bool {
+        claudeCLIAdapter.isCLIAvailable()
+    }
+
+    private lazy var claudeCLIAdapter: ClaudeCLIAdapter = {
+        return ClaudeCLIAdapter(config: ClaudeCLIConfig(model: selectedModel))
+    }()
+
+    private lazy var codexCLIAdapter: CodexCLIAdapter = {
+        return CodexCLIAdapter()
+    }()
+
+    /// Whether the Codex CLI binary is installed and reachable.
+    var isCodexBackendAvailable: Bool {
+        codexCLIAdapter.isCLIAvailable()
+    }
+
     func setSelectedModel(_ model: String) {
         selectedModel = model
         UserDefaults.standard.set(model, forKey: "selectedClaudeModel")
         claudeAPI.model = model
+        claudeCLIAdapter.model = model
+    }
+
+    func setSelectedBackend(_ backend: String) {
+        selectedBackend = backend
+        UserDefaults.standard.set(backend, forKey: "selectedChatBackend")
+    }
+
+    /// The TTS backend: "cloud" (ElevenLabs via Worker) or "local" (macOS AVSpeechSynthesizer).
+    @Published var selectedTTSBackend: String = UserDefaults.standard.string(forKey: "selectedTTSBackend") ?? "local"
+
+    private lazy var localTTSClient: LocalTTSClient = {
+        return LocalTTSClient()
+    }()
+
+    func setSelectedTTSBackend(_ backend: String) {
+        selectedTTSBackend = backend
+        UserDefaults.standard.set(backend, forKey: "selectedTTSBackend")
+    }
+
+    /// The ASR backend: "cloud" (AssemblyAI) or "local" (Apple Speech on-device).
+    @Published var selectedASRBackend: String = UserDefaults.standard.string(forKey: "selectedASRBackend") ?? "local"
+
+    func setSelectedASRBackend(_ backend: String) {
+        selectedASRBackend = backend
+        UserDefaults.standard.set(backend, forKey: "selectedASRBackend")
+        buddyDictationManager.switchTranscriptionProvider(to: backend)
+    }
+
+    /// The interaction mode: "voice" (speak → Claude → TTS response) or
+    /// "type" (speak → text pasted at cursor, no Claude involved).
+    @Published var selectedMode: String = UserDefaults.standard.string(forKey: "selectedInteractionMode") ?? "voice"
+
+    func setSelectedMode(_ mode: String) {
+        selectedMode = mode
+        UserDefaults.standard.set(mode, forKey: "selectedInteractionMode")
     }
 
     /// User preference for whether the Clicky cursor should be shown.
@@ -179,9 +237,19 @@ final class CompanionManager: ObservableObject {
         bindVoiceStateObservation()
         bindAudioPowerLevel()
         bindShortcutTransitions()
+
+        // Sync the transcription provider with the persisted ASR backend setting.
+        // BuddyDictationManager defaults to AssemblyAI at init, but if the user
+        // has selected local ASR we need to switch before the first push-to-talk.
+        if selectedASRBackend == "local" {
+            buddyDictationManager.switchTranscriptionProvider(to: "local")
+        }
+
         // Eagerly touch the Claude API so its TLS warmup handshake completes
         // well before the onboarding demo fires at ~40s into the video.
-        _ = claudeAPI
+        if selectedBackend == "api" {
+            _ = claudeAPI
+        }
 
         // If the user already completed onboarding AND all permissions are
         // still granted, show the cursor overlay immediately. If permissions
@@ -494,6 +562,7 @@ final class CompanionManager: ObservableObject {
             // Cancel any in-progress response and TTS from a previous utterance
             currentResponseTask?.cancel()
             elevenLabsTTSClient.stopPlayback()
+            localTTSClient.stopPlayback()
             clearDetectedElementLocation()
 
             // Dismiss the onboarding prompt if it's showing
@@ -521,7 +590,19 @@ final class CompanionManager: ObservableObject {
                         self?.lastTranscript = finalTranscript
                         print("🗣️ Companion received transcript: \(finalTranscript)")
                         ClickyAnalytics.trackUserMessageSent(transcript: finalTranscript)
-                        self?.sendTranscriptToClaudeWithScreenshot(transcript: finalTranscript)
+
+                        if self?.selectedMode == "type" {
+                            // Type mode: filter transcript and paste at cursor
+                            let cleaned = TranscriptFilter.apply(finalTranscript)
+                            if !cleaned.isEmpty {
+                                PasteController.paste(text: cleaned)
+                                print("⌨️ Type mode: pasted \(cleaned.count) chars at cursor")
+                            }
+                            self?.voiceState = .idle
+                            self?.scheduleTransientHideIfNeeded()
+                        } else {
+                            self?.sendTranscriptToClaudeWithScreenshot(transcript: finalTranscript)
+                        }
                     }
                 )
             }
@@ -586,6 +667,14 @@ final class CompanionManager: ObservableObject {
     private func sendTranscriptToClaudeWithScreenshot(transcript: String) {
         currentResponseTask?.cancel()
         elevenLabsTTSClient.stopPlayback()
+        localTTSClient.stopPlayback()
+
+        // Clean up ASR artifacts and filler words before sending to Claude
+        let transcript = TranscriptFilter.apply(transcript)
+        guard !transcript.isEmpty else {
+            print("🗑️ Transcript was empty after filtering — skipping")
+            return
+        }
 
         currentResponseTask = Task {
             // Stay in processing (spinner) state — no streaming text displayed
@@ -610,15 +699,34 @@ final class CompanionManager: ObservableObject {
                     (userPlaceholder: entry.userTranscript, assistantResponse: entry.assistantResponse)
                 }
 
-                let (fullResponseText, _) = try await claudeAPI.analyzeImageStreaming(
-                    images: labeledImages,
-                    systemPrompt: Self.companionVoiceResponseSystemPrompt,
-                    conversationHistory: historyForAPI,
-                    userPrompt: transcript,
-                    onTextChunk: { _ in
-                        // No streaming text display — spinner stays until TTS plays
-                    }
-                )
+                let (fullResponseText, _): (String, TimeInterval)
+                if selectedBackend == "cli" {
+                    (fullResponseText, _) = try await claudeCLIAdapter.analyzeImageStreaming(
+                        images: labeledImages,
+                        systemPrompt: Self.companionVoiceResponseSystemPrompt,
+                        conversationHistory: historyForAPI,
+                        userPrompt: transcript,
+                        onTextChunk: { _ in }
+                    )
+                } else if selectedBackend == "codex" {
+                    (fullResponseText, _) = try await codexCLIAdapter.analyzeImageStreaming(
+                        images: labeledImages,
+                        systemPrompt: Self.companionVoiceResponseSystemPrompt,
+                        conversationHistory: historyForAPI,
+                        userPrompt: transcript,
+                        onTextChunk: { _ in }
+                    )
+                } else {
+                    (fullResponseText, _) = try await claudeAPI.analyzeImageStreaming(
+                        images: labeledImages,
+                        systemPrompt: Self.companionVoiceResponseSystemPrompt,
+                        conversationHistory: historyForAPI,
+                        userPrompt: transcript,
+                        onTextChunk: { _ in
+                            // No streaming text display — spinner stays until TTS plays
+                        }
+                    )
+                }
 
                 guard !Task.isCancelled else { return }
 
@@ -701,12 +809,16 @@ final class CompanionManager: ObservableObject {
                 // until the audio actually starts playing, then switch to responding.
                 if !spokenText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     do {
-                        try await elevenLabsTTSClient.speakText(spokenText)
+                        if selectedTTSBackend == "local" {
+                            try await localTTSClient.speakText(spokenText)
+                        } else {
+                            try await elevenLabsTTSClient.speakText(spokenText)
+                        }
                         // speakText returns after player.play() — audio is now playing
                         voiceState = .responding
                     } catch {
                         ClickyAnalytics.trackTTSError(error: error.localizedDescription)
-                        print("⚠️ ElevenLabs TTS error: \(error)")
+                        print("⚠️ TTS error: \(error)")
                         speakCreditsErrorFallback()
                     }
                 }
@@ -735,7 +847,7 @@ final class CompanionManager: ObservableObject {
         transientHideTask?.cancel()
         transientHideTask = Task {
             // Wait for TTS audio to finish playing
-            while elevenLabsTTSClient.isPlaying {
+            while elevenLabsTTSClient.isPlaying || localTTSClient.isPlaying {
                 try? await Task.sleep(nanoseconds: 200_000_000)
                 guard !Task.isCancelled else { return }
             }
@@ -982,12 +1094,29 @@ final class CompanionManager: ObservableObject {
                 let dimensionInfo = " (image dimensions: \(cursorScreenCapture.screenshotWidthInPixels)x\(cursorScreenCapture.screenshotHeightInPixels) pixels)"
                 let labeledImages = [(data: cursorScreenCapture.imageData, label: cursorScreenCapture.label + dimensionInfo)]
 
-                let (fullResponseText, _) = try await claudeAPI.analyzeImageStreaming(
-                    images: labeledImages,
-                    systemPrompt: Self.onboardingDemoSystemPrompt,
-                    userPrompt: "look around my screen and find something interesting to point at",
-                    onTextChunk: { _ in }
-                )
+                let (fullResponseText, _): (String, TimeInterval)
+                if selectedBackend == "cli" {
+                    (fullResponseText, _) = try await claudeCLIAdapter.analyzeImageStreaming(
+                        images: labeledImages,
+                        systemPrompt: Self.onboardingDemoSystemPrompt,
+                        userPrompt: "look around my screen and find something interesting to point at",
+                        onTextChunk: { _ in }
+                    )
+                } else if selectedBackend == "codex" {
+                    (fullResponseText, _) = try await codexCLIAdapter.analyzeImageStreaming(
+                        images: labeledImages,
+                        systemPrompt: Self.onboardingDemoSystemPrompt,
+                        userPrompt: "look around my screen and find something interesting to point at",
+                        onTextChunk: { _ in }
+                    )
+                } else {
+                    (fullResponseText, _) = try await claudeAPI.analyzeImageStreaming(
+                        images: labeledImages,
+                        systemPrompt: Self.onboardingDemoSystemPrompt,
+                        userPrompt: "look around my screen and find something interesting to point at",
+                        onTextChunk: { _ in }
+                    )
+                }
 
                 let parseResult = Self.parsePointingCoordinates(from: fullResponseText)
 

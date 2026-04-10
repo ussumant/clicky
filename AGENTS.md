@@ -14,7 +14,7 @@ All API keys live on a Cloudflare Worker proxy — nothing sensitive ships in th
 - **App Type**: Menu bar-only (`LSUIElement=true`), no dock icon or main window
 - **Framework**: SwiftUI (macOS native) with AppKit bridging for menu bar panel and cursor overlay
 - **Pattern**: MVVM with `@StateObject` / `@Published` state management
-- **AI Chat**: Claude (Sonnet 4.6 default, Opus 4.6 optional) via Cloudflare Worker proxy with SSE streaming
+- **AI Chat**: Claude (Sonnet 4.6 default, Opus 4.6 optional). Dual backend: Cloudflare Worker proxy (API key) or local Claude Code CLI (subscription-based, no API key needed). Selectable in panel UI.
 - **Speech-to-Text**: AssemblyAI real-time streaming (`u3-rt-pro` model) via websocket, with OpenAI and Apple Speech as fallbacks
 - **Text-to-Speech**: ElevenLabs (`eleven_flash_v2_5` model) via Cloudflare Worker proxy
 - **Screen Capture**: ScreenCaptureKit (macOS 14.2+), multi-monitor support
@@ -66,9 +66,13 @@ Worker vars: `ELEVENLABS_VOICE_ID`
 | `AppleSpeechTranscriptionProvider.swift` | ~147 | Local fallback transcription provider backed by Apple's Speech framework. |
 | `BuddyAudioConversionSupport.swift` | ~108 | Audio conversion helpers. Converts live mic buffers to PCM16 mono audio and builds WAV payloads for upload-based providers. |
 | `GlobalPushToTalkShortcutMonitor.swift` | ~132 | System-wide push-to-talk monitor. Owns the listen-only `CGEvent` tap and publishes press/release transitions. |
-| `ClaudeAPI.swift` | ~291 | Claude vision API client with streaming (SSE) and non-streaming modes. TLS warmup optimization, image MIME detection, conversation history support. |
+| `ClaudeAPI.swift` | ~291 | Claude vision API client with streaming (SSE) and non-streaming modes. TLS warmup optimization, image MIME detection, conversation history support. Used when backend is "API". |
+| `ClaudeCLIAdapter.swift` | ~290 | Claude Code CLI adapter. Routes chat through the locally-installed `claude` binary using the user's subscription credentials. Saves screenshots to temp files for CLI to read, parses stream-json output for progressive text. Used when backend is "CLI". Pattern from ScreenRecorder's ClaudeAnalysisService. |
 | `OpenAIAPI.swift` | ~142 | OpenAI GPT vision API client. |
-| `ElevenLabsTTSClient.swift` | ~81 | ElevenLabs TTS client. Sends text to the Worker proxy, plays back audio via `AVAudioPlayer`. Exposes `isPlaying` for transient cursor scheduling. |
+| `ElevenLabsTTSClient.swift` | ~81 | ElevenLabs TTS client (cloud). Sends text to the Worker proxy, plays back audio via `AVAudioPlayer`. Used when Voice is "Cloud". |
+| `LocalTTSClient.swift` | ~95 | Local TTS client using macOS AVSpeechSynthesizer. No network needed. Drop-in replacement for ElevenLabsTTSClient. Used when Voice is "Local". |
+| `TranscriptFilter.swift` | ~110 | Post-processing pipeline for voice transcripts. Strips ASR artifacts and filler words (uh/um/er/like/you know) before sending to Claude. Ported from Muesli. |
+| `PasteController.swift` | ~110 | Pastes text at cursor via clipboard save/restore + Cmd+V simulation. Used by Type mode. Ported from Muesli. |
 | `ElementLocationDetector.swift` | ~335 | Detects UI element locations in screenshots for cursor pointing. |
 | `DesignSystem.swift` | ~880 | Design system tokens — colors, corner radii, shared styles. All UI references `DS.Colors`, `DS.CornerRadius`, etc. |
 | `ClickyAnalytics.swift` | ~121 | PostHog analytics integration for usage tracking. |

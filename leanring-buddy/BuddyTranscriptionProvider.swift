@@ -42,6 +42,19 @@ enum BuddyTranscriptionProviderFactory {
         return provider
     }
 
+    /// Returns the best available cloud provider (AssemblyAI or OpenAI).
+    /// Used when switching from local back to cloud at runtime.
+    static func makeDefaultCloudProvider() -> any BuddyTranscriptionProvider {
+        let assemblyAIProvider = AssemblyAIStreamingTranscriptionProvider()
+        if assemblyAIProvider.isConfigured { return assemblyAIProvider }
+
+        let openAIProvider = OpenAIAudioTranscriptionProvider()
+        if openAIProvider.isConfigured { return openAIProvider }
+
+        // No cloud provider configured — fall back to Apple Speech
+        return AppleSpeechTranscriptionProvider()
+    }
+
     private static func resolveProvider() -> any BuddyTranscriptionProvider {
         let preferredProviderRawValue = AppBundleConfiguration
             .stringValue(forKey: "VoiceTranscriptionProvider")?

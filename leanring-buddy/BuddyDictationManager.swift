@@ -262,7 +262,7 @@ final class BuddyDictationManager: NSObject, ObservableObject {
         return AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined
     }
 
-    private let transcriptionProvider: any BuddyTranscriptionProvider
+    private var transcriptionProvider: any BuddyTranscriptionProvider
     private let audioEngine = AVAudioEngine()
     private var activeTranscriptionSession: (any BuddyStreamingTranscriptionSession)?
     private var activeStartSource: BuddyDictationStartSource?
@@ -285,6 +285,23 @@ final class BuddyDictationManager: NSObject, ObservableObject {
         self.transcriptionProvider = transcriptionProvider
         self.transcriptionProviderDisplayName = transcriptionProvider.displayName
         super.init()
+    }
+
+    /// Switches the transcription provider at runtime. Call when the user
+    /// toggles between cloud (AssemblyAI) and local (Apple Speech) ASR.
+    func switchTranscriptionProvider(to providerName: String) {
+        let newProvider: any BuddyTranscriptionProvider
+        switch providerName {
+        case "local":
+            newProvider = AppleSpeechTranscriptionProvider()
+        case "cloud":
+            newProvider = BuddyTranscriptionProviderFactory.makeDefaultCloudProvider()
+        default:
+            newProvider = BuddyTranscriptionProviderFactory.makeDefaultCloudProvider()
+        }
+        self.transcriptionProvider = newProvider
+        self.transcriptionProviderDisplayName = newProvider.displayName
+        print("🎙️ Switched transcription to: \(newProvider.displayName)")
     }
 
     func updateContextualKeyterms(_ contextualKeyterms: [String]) {

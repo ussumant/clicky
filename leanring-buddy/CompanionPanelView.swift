@@ -31,6 +31,37 @@ struct CompanionPanelView: View {
 
                 modelPickerRow
                     .padding(.horizontal, 16)
+
+                Spacer()
+                    .frame(height: 4)
+
+                backendPickerRow
+                    .padding(.horizontal, 16)
+
+                Spacer()
+                    .frame(height: 4)
+
+                ttsPickerRow
+                    .padding(.horizontal, 16)
+
+                Spacer()
+                    .frame(height: 4)
+
+                asrPickerRow
+                    .padding(.horizontal, 16)
+
+                Spacer()
+                    .frame(height: 8)
+
+                Divider()
+                    .background(DS.Colors.borderSubtle)
+                    .padding(.horizontal, 16)
+
+                Spacer()
+                    .frame(height: 8)
+
+                modePickerRow
+                    .padding(.horizontal, 16)
             }
 
             if !companionManager.allPermissionsGranted {
@@ -636,6 +667,200 @@ struct CompanionPanelView: View {
                     RoundedRectangle(cornerRadius: 5, style: .continuous)
                         .fill(isSelected ? Color.white.opacity(0.1) : Color.clear)
                 )
+        }
+        .buttonStyle(.plain)
+        .pointerCursor()
+    }
+
+    // MARK: - Mode Picker
+
+    private var modePickerRow: some View {
+        HStack {
+            Text("Mode")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(DS.Colors.textSecondary)
+
+            Spacer()
+
+            HStack(spacing: 0) {
+                modeOptionButton(label: "Voice", modeID: "voice")
+                modeOptionButton(label: "Type", modeID: "type")
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.white.opacity(0.06))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(DS.Colors.borderSubtle, lineWidth: 0.5)
+            )
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func modeOptionButton(label: String, modeID: String) -> some View {
+        let isSelected = companionManager.selectedMode == modeID
+        return Button(action: {
+            companionManager.setSelectedMode(modeID)
+        }) {
+            Text(label)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(isSelected ? DS.Colors.textPrimary : DS.Colors.textTertiary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(isSelected ? Color.white.opacity(0.1) : Color.clear)
+                )
+        }
+        .buttonStyle(.plain)
+        .pointerCursor()
+    }
+
+    // MARK: - ASR Picker
+
+    private var asrPickerRow: some View {
+        HStack {
+            Text("Listen")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(DS.Colors.textSecondary)
+
+            Spacer()
+
+            HStack(spacing: 0) {
+                asrOptionButton(label: "Cloud", asrID: "cloud")
+                asrOptionButton(label: "Local", asrID: "local")
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.white.opacity(0.06))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(DS.Colors.borderSubtle, lineWidth: 0.5)
+            )
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func asrOptionButton(label: String, asrID: String) -> some View {
+        let isSelected = companionManager.selectedASRBackend == asrID
+        return Button(action: {
+            companionManager.setSelectedASRBackend(asrID)
+        }) {
+            Text(label)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(isSelected ? DS.Colors.textPrimary : DS.Colors.textTertiary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(isSelected ? Color.white.opacity(0.1) : Color.clear)
+                )
+        }
+        .buttonStyle(.plain)
+        .pointerCursor()
+    }
+
+    // MARK: - TTS Picker
+
+    private var ttsPickerRow: some View {
+        HStack {
+            Text("Voice")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(DS.Colors.textSecondary)
+
+            Spacer()
+
+            HStack(spacing: 0) {
+                ttsOptionButton(label: "Cloud", ttsID: "cloud")
+                ttsOptionButton(label: "Local", ttsID: "local")
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.white.opacity(0.06))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(DS.Colors.borderSubtle, lineWidth: 0.5)
+            )
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func ttsOptionButton(label: String, ttsID: String) -> some View {
+        let isSelected = companionManager.selectedTTSBackend == ttsID
+        return Button(action: {
+            companionManager.setSelectedTTSBackend(ttsID)
+        }) {
+            Text(label)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(isSelected ? DS.Colors.textPrimary : DS.Colors.textTertiary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(isSelected ? Color.white.opacity(0.1) : Color.clear)
+                )
+        }
+        .buttonStyle(.plain)
+        .pointerCursor()
+    }
+
+    // MARK: - Backend Picker
+
+    private var backendPickerRow: some View {
+        HStack {
+            Text("Backend")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(DS.Colors.textSecondary)
+
+            Spacer()
+
+            HStack(spacing: 0) {
+                backendOptionButton(label: "API Key", backendID: "api")
+                backendOptionButton(label: "Claude Code", backendID: "cli")
+                backendOptionButton(label: "Codex", backendID: "codex")
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.white.opacity(0.06))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(DS.Colors.borderSubtle, lineWidth: 0.5)
+            )
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func backendOptionButton(label: String, backendID: String) -> some View {
+        let isSelected = companionManager.selectedBackend == backendID
+        return Button(action: {
+            companionManager.setSelectedBackend(backendID)
+        }) {
+            HStack(spacing: 4) {
+                Text(label)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(isSelected ? DS.Colors.textPrimary : DS.Colors.textTertiary)
+
+                // Show availability dot for local backends
+                if backendID == "cli" {
+                    Circle()
+                        .fill(companionManager.isCLIBackendAvailable ? Color.green : Color.red)
+                        .frame(width: 6, height: 6)
+                } else if backendID == "codex" {
+                    Circle()
+                        .fill(companionManager.isCodexBackendAvailable ? Color.green : Color.red)
+                        .frame(width: 6, height: 6)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(isSelected ? Color.white.opacity(0.1) : Color.clear)
+            )
         }
         .buttonStyle(.plain)
         .pointerCursor()
