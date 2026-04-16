@@ -17,7 +17,7 @@ struct OpenAIAudioTranscriptionProviderError: LocalizedError {
 }
 
 final class OpenAIAudioTranscriptionProvider: BuddyTranscriptionProvider {
-    private let apiKey = AppBundleConfiguration.stringValue(forKey: "OpenAIAPIKey")
+    private let apiKey = OpenAISettingsStore.apiKey
     private let modelName = AppBundleConfiguration.stringValue(forKey: "OpenAITranscriptionModel")
         ?? "gpt-4o-transcribe"
 
@@ -30,7 +30,7 @@ final class OpenAIAudioTranscriptionProvider: BuddyTranscriptionProvider {
 
     var unavailableExplanation: String? {
         guard !isConfigured else { return nil }
-        return "OpenAI transcription is not configured. Add OpenAIAPIKey to Info.plist."
+        return "OpenAI transcription is not configured. Add your OpenAI API key in settings."
     }
 
     func startStreamingSession(
@@ -57,7 +57,7 @@ final class OpenAIAudioTranscriptionProvider: BuddyTranscriptionProvider {
 }
 
 private final class OpenAIAudioTranscriptionSession: BuddyStreamingTranscriptionSession {
-    let finalTranscriptFallbackDelaySeconds: TimeInterval = 8.0
+    let finalTranscriptFallbackDelaySeconds: TimeInterval = 28.0
 
     private struct TranscriptionResponse: Decodable {
         let text: String
@@ -101,9 +101,9 @@ private final class OpenAIAudioTranscriptionSession: BuddyStreamingTranscription
         self.onError = onError
 
         let urlSessionConfiguration = URLSessionConfiguration.default
-        urlSessionConfiguration.timeoutIntervalForRequest = 45
-        urlSessionConfiguration.timeoutIntervalForResource = 90
-        urlSessionConfiguration.waitsForConnectivity = true
+        urlSessionConfiguration.timeoutIntervalForRequest = 15
+        urlSessionConfiguration.timeoutIntervalForResource = 25
+        urlSessionConfiguration.waitsForConnectivity = false
         self.urlSession = URLSession(configuration: urlSessionConfiguration)
     }
 
@@ -159,6 +159,7 @@ private final class OpenAIAudioTranscriptionSession: BuddyStreamingTranscription
         )
 
         do {
+            print("[OpenAI Transcription] Uploading \(wavAudioData.count / 1024)KB WAV to \(modelName)")
             let transcriptText = try await requestTranscription(for: wavAudioData)
             guard !stateQueue.sync(execute: { isCancelled }) else { return }
 
@@ -166,6 +167,7 @@ private final class OpenAIAudioTranscriptionSession: BuddyStreamingTranscription
                 onTranscriptUpdate(transcriptText)
             }
 
+            print("[OpenAI Transcription] Final transcript chars: \(transcriptText.count)")
             deliverFinalTranscript(transcriptText)
         } catch {
             guard !stateQueue.sync(execute: { isCancelled }) else { return }

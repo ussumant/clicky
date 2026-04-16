@@ -288,12 +288,19 @@ final class BuddyDictationManager: NSObject, ObservableObject {
     }
 
     /// Switches the transcription provider at runtime. Call when the user
-    /// toggles between cloud (AssemblyAI) and local (Apple Speech) ASR.
+    /// toggles between cloud, OpenAI, and local ASR.
     func switchTranscriptionProvider(to providerName: String) {
+        lastErrorMessage = nil
         let newProvider: any BuddyTranscriptionProvider
         switch providerName {
         case "local":
             newProvider = AppleSpeechTranscriptionProvider()
+        case "openai":
+            let openAIProvider = OpenAIAudioTranscriptionProvider()
+            newProvider = openAIProvider
+            if !openAIProvider.isConfigured {
+                lastErrorMessage = openAIProvider.unavailableExplanation
+            }
         case "cloud":
             newProvider = BuddyTranscriptionProviderFactory.makeDefaultCloudProvider()
         default:
@@ -617,7 +624,10 @@ final class BuddyDictationManager: NSObject, ObservableObject {
         resetSessionState()
 
         guard shouldSubmitFinalDraft else { return }
-        guard !finalTranscriptText.isEmpty else { return }
+        guard !finalTranscriptText.isEmpty else {
+            lastErrorMessage = "I did not catch any speech. Try holding Control+Option a little longer."
+            return
+        }
 
         currentDraftCallbacks?.submitDraftText(finalDraftText)
     }

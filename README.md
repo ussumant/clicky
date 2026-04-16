@@ -1,6 +1,17 @@
 # Hi, this is Clicky.
 It's an AI teacher that lives as a buddy next to your cursor. It can see your screen, talk to you, and even point at stuff. Kinda like having a real teacher next to you.
 
+## Codex Hackathon: Pawscript
+
+This fork adds **Pawscript**, a tutorial-to-execution layer for Clicky. Paste a YouTube tutorial or a how-to doc, and Spanks turns it into a Workflow Recorder-compatible skill that can be replayed in two demo modes:
+
+- **Guide me** — Spanks watches your screen, narrates the current step, points at likely targets, and moves the cursor.
+- **Watch Spanks do it** — Browser Use opens a visible browser and executes the same skill.
+
+The canonical bundled fallback is OpenAI's “Designing delightful frontends with GPT-5.4” guide, so the hackathon demo works even if the hero YouTube URL fails validation.
+
+For the hackathon slice, **Browser Use is the primary automation engine** because Pawscript v1 focuses on browser tutorials: it can open a visible browser, click/type through the extracted skill, and stream progress back to Spanks. Full-desktop computer-use systems like [CUA](https://github.com/trycua/cua) are a strong roadmap fit for non-browser tutorials, but they add sandbox and host-control setup risk that is too high for the 2-minute demo. Keep the Pawscript executor boundary skill-based so Browser Use can later sit beside a `CUAExecutor` or another computer-use backend without changing the WR-compatible `SkillStep[]` contract.
+
 Download it [here](https://www.clicky.so/) for free.
 
 Here's the [original tweet](https://x.com/FarzaTV/status/2041314633978659092) that kinda blew up for a demo for more context.
@@ -38,6 +49,35 @@ If you want to do it yourself, here's the deal.
 - Node.js 18+ (for the Cloudflare Worker)
 - A [Cloudflare](https://cloudflare.com) account (free tier works)
 - API keys for: [Anthropic](https://console.anthropic.com), [AssemblyAI](https://www.assemblyai.com), [ElevenLabs](https://elevenlabs.io)
+- Optional: an [OpenAI](https://platform.openai.com) API key for OpenAI voice and transcription from the in-app settings panel.
+
+### OpenAI voice setup
+
+Open the Clicky menu bar panel, expand **OpenAI**, paste your OpenAI API key, and hit **Save key**. The key is stored in macOS Keychain, not `UserDefaults`.
+
+Then set **Voice** to **OpenAI** to power spoken responses with OpenAI text-to-speech. You can also set **Listen** to **OpenAI** if you want OpenAI transcription instead of AssemblyAI or local Apple Speech.
+
+### Pawscript demo setup
+
+Pawscript expects demo tools to be preinstalled; it does not auto-install them from the app.
+
+```bash
+brew install yt-dlp
+uv venv --python 3.12
+source .venv/bin/activate
+uv pip install browser-use openai python-dotenv
+uvx browser-use install
+```
+
+If you use a custom Python environment, set `PAWSCRIPT_PYTHON` to its Python binary before launching the app from Xcode.
+
+Demo flow:
+
+1. Paste `https://www.youtube.com/watch?v=Q_bd7BFh0XY`.
+2. Click **Extract skill**.
+3. Click **Guide me** to let Spanks point and move the cursor while you do the steps.
+4. Click **Stuck** once to record a `human-observation` gotcha.
+5. Click **Watch Spanks do it** to run the same skill through Browser Use in a visible browser.
 
 ### 1. Set up the Cloudflare Worker
 

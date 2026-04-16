@@ -1,28 +1,19 @@
 # AGENTS.md - leanring-buddy (Main App Target)
 
-## Source Files
+This target is the menu bar-only macOS app. The authoritative architecture lives in the root `AGENTS.md`; this file calls out app-target specifics.
 
-### FloatingSessionButton.swift
-- `FloatingSessionButtonManager` — `@MainActor` class managing the `NSPanel` lifecycle
-  - `showFloatingButton()` — Creates/shows the panel in top-right of primary screen
-  - `hideFloatingButton()` — Hides panel (keeps it alive for quick re-show)
-  - `destroyFloatingButton()` — Removes panel permanently (session ended)
-  - `onFloatingButtonClicked` — Callback closure, set by ContentView to bring main window to front
-  - `floatingButtonPanel` — Exposed `NSPanel` reference for screenshot exclusion
-- `FloatingButtonView` — Private SwiftUI view with gradient circle, scale+glow hover animation, pointer cursor
+## Current App Structure
 
-### ContentView.swift
-- Receives `FloatingSessionButtonManager` via `@EnvironmentObject`
-- `isMainWindowCurrentlyFocused` — Tracks main window focus state
-- `configureFloatingButtonManager()` — Wires up the click callback
-- `startObservingMainWindowFocusChanges()` — Sets up `NSWindow` notification observers
-- `updateFloatingButtonVisibility()` — Core logic: show if running + not focused, hide otherwise
-- `bringMainWindowToFront()` — Activates app and orders main window front
+- `leanring_buddyApp.swift` creates `CompanionManager`, starts the menu bar panel, and keeps the app dockless via `LSUIElement`.
+- `CompanionManager.swift` owns permissions, push-to-talk, screen capture, AI backends, TTS, overlay state, and the new `PawscriptExecutionManager`.
+- `CompanionPanelView.swift` hosts the compact menu bar UI and embeds `PawscriptPanelView` after permissions are granted.
+- `OverlayWindow.swift` owns the click-through multi-monitor overlay, flight animation, speech bubbles, waveform/spinner states, and Spanks rendering.
+- `Pawscript*.swift` files implement tutorial-source extraction, WR-compatible skill storage, live screen matching, Browser Use execution, and step progress.
+- `PawscriptSkills/*.json` contains bundled demo/fallback skill packages.
 
-### ScreenshotManager.swift
-- `floatingButtonWindowToExcludeFromCaptures` — `NSWindow?` reference set by ContentView
-- `captureScreen()` — Matches the floating window to an `SCWindow` and excludes it from capture filter
+## Pawscript Rules
 
-### leanring_buddyApp.swift
-- Owns `FloatingSessionButtonManager` as `@StateObject`
-- Injects it into ContentView via `.environmentObject()`
+- Pawscript's primary agent path is Browser Use in a visible browser; Codex prompt execution is not the main demo path.
+- Do not auto-install demo tools from the app. Surface missing `yt-dlp`, Browser Use, or Python setup as clear setup errors.
+- Keep Pawscript code in focused files; avoid adding more large feature logic to `CompanionManager.swift`, `CompanionPanelView.swift`, or `OverlayWindow.swift`.
+- Preserve existing Clicky voice, permission, TTS, subtitle, and overlay behavior while adding Pawscript paths.

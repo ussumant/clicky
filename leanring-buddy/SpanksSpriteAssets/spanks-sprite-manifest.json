@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "name": "Spanks Cat Companion Sprite Set",
+  "frameWidth": 128,
+  "frameHeight": 128,
+  "anchorX": 64,
+  "anchorY": 108,
+  "rendering": {
+    "interpolation": "nearest",
+    "defaultPointSize": 64,
+    "minimumPointSize": 40,
+    "maximumPointSize": 80
+  },
+  "style": {
+    "medium": "pixel art",
+    "background": "transparent",
+    "shadow": "runtime only",
+    "text": "none"
+  },
+  "animations": {
+    "idle": {
+      "file": "spanks-idle.png",
+      "frames": 8,
+      "fps": 7,
+      "loop": true,
+      "semanticMeaning": "Companion is present and available."
+    },
+    "listening": {
+      "file": "spanks-listening.png",
+      "frames": 6,
+      "fps": 9,
+      "loop": true,
+      "semanticMeaning": "Push-to-talk or Guide me is actively listening."
+    },
+    "capturingScreen": {
+      "file": "spanks-capturing-screen.png",
+      "frames": 8,
+      "fps": 9,
+      "loop": true,
+      "semanticMeaning": "Companion is reading the current screen."
+    },
+    "thinking": {
+      "file": "spanks-thinking.png",
+      "frames": 8,
+      "fps": 7,
+      "loop": true,
+      "semanticMeaning": "Transcript and screenshot are being processed."
+    },
+    "speaking": {
+      "file": "spanks-speaking.png",
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "semanticMeaning": "Companion is streaming text or playing TTS."
+    },
+    "pointing": {
+      "file": "spanks-pointing.png",
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "semanticMeaning": "Companion is directing attention to a UI target."
+    },
+    "waitingForHuman": {
+      "file": "spanks-waiting-for-human.png",
+      "frames": 6,
+      "fps": 5,
+      "loop": true,
+      "semanticMeaning": "Guide me is waiting for the user to complete a step."
+    },
+    "success": {
+      "file": "spanks-success.png",
+      "frames": 12,
+      "fps": 12,
+      "loop": false,
+      "returnTo": "idle",
+      "semanticMeaning": "A human or agent step completed successfully."
+    },
+    "agentRunning": {
+      "file": "spanks-agent-running.png",
+      "frames": 10,
+      "fps": 12,
+      "loop": true,
+      "semanticMeaning": "Watch Spanks do it is controlling the browser."
+    },
+    "error": {
+      "file": "spanks-error.png",
+      "frames": 8,
+      "fps": 9,
+      "loop": false,
+      "returnTo": "idle",
+      "semanticMeaning": "A recoverable problem happened."
+    },
+    "permissionNeeded": {
+      "file": "spanks-permission-needed.png",
+      "frames": 6,
+      "fps": 6,
+      "loop": true,
+      "semanticMeaning": "The app needs microphone, screen recording, or accessibility access."
+    },
+    "disabled": {
+      "file": "spanks-disabled.png",
+      "frames": 6,
+      "fps": 4,
+      "loop": true,
+      "semanticMeaning": "The companion is hidden or inactive until summoned."
+    }
+  }
+}

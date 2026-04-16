@@ -9,6 +9,15 @@ macOS menu bar companion app. Lives entirely in the macOS status bar (no dock ic
 
 All API keys live on a Cloudflare Worker proxy — nothing sensitive ships in the app.
 
+## Pawscript Hackathon Layer
+
+This fork includes Pawscript, a Codex Hackathon extension that turns tutorial sources into Workflow Recorder-compatible skill packages. The menu bar panel has a Pawscript section with YouTube/Doc source tabs, a customization prompt, and two primary demo modes:
+
+- `Guide me` watches the screen, narrates the current step, moves Spanks, moves the system cursor, and increments `humanCompletions`.
+- `Watch Spanks do it` runs the same WR-compatible skill through Browser Use in a visible browser and increments `agentCompletions`.
+
+The hero YouTube candidate is `https://www.youtube.com/watch?v=Q_bd7BFh0XY`; the OpenAI “Designing delightful frontends with GPT-5.4” guide is the canonical doc fallback.
+
 ## Architecture
 
 - **App Type**: Menu bar-only (`LSUIElement=true`), no dock icon or main window
@@ -78,6 +87,9 @@ Worker vars: `ELEVENLABS_VOICE_ID`
 | `ClickyAnalytics.swift` | ~121 | PostHog analytics integration for usage tracking. |
 | `WindowPositionManager.swift` | ~262 | Window placement logic, Screen Recording permission flow, and accessibility permission helpers. |
 | `AppBundleConfiguration.swift` | ~28 | Runtime configuration reader for keys stored in the app bundle Info.plist. |
+| `Skill.swift` | ~290 | Workflow Recorder-compatible Skill, SkillStep, SkillGotcha, and SkillAcceptanceCriterion models used by Pawscript. |
+| `Pawscript*.swift` | varies | Pawscript source extraction, prompt building, local JSON persistence, Codex execution, panel UI, and run-state orchestration. |
+| `SpanksSpriteView.swift` | ~130 | Pixel-cat renderer that replaces the blue triangle during idle/responding/pointing overlay states. |
 | `worker/src/index.ts` | ~142 | Cloudflare Worker proxy. Three routes: `/chat` (Claude), `/tts` (ElevenLabs), `/transcribe-token` (AssemblyAI temp token). |
 
 ## Build & Run

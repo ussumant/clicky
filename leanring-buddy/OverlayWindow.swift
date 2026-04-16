@@ -294,18 +294,15 @@ struct BlueCursorView: View {
                     }
             }
 
-            // Blue triangle cursor — shown when idle or while TTS is playing (responding).
-            // All three states (triangle, waveform, spinner) stay in the view tree
+            // Spanks pixel cat — shown when idle or while TTS is playing (responding).
+            // All three states (cat, waveform, spinner) stay in the view tree
             // permanently and cross-fade via opacity so SwiftUI doesn't remove/re-insert
             // them (which caused a visible cursor "pop").
             //
             // During cursor following: fast spring animation for snappy tracking.
             // During navigation: NO implicit animation — the frame-by-frame bezier
             // timer controls position directly at 60fps for a smooth arc flight.
-            Triangle()
-                .fill(DS.Colors.overlayCursorBlue)
-                .frame(width: 16, height: 16)
-                .rotationEffect(.degrees(triangleRotationDegrees))
+            SpanksSpriteView(mood: currentSpanksMood, size: 34)
                 .shadow(color: DS.Colors.overlayCursorBlue, radius: 8 + (buddyFlightScale - 1.0) * 20, x: 0, y: 0)
                 .scaleEffect(buddyFlightScale)
                 .opacity(buddyIsVisibleOnThisScreen && (companionManager.voiceState == .idle || companionManager.voiceState == .responding) ? cursorOpacity : 0)
@@ -422,6 +419,17 @@ struct BlueCursorView: View {
             return isCursorOnThisScreen
         case .navigatingToTarget, .pointingAtTarget:
             return true
+        }
+    }
+
+    private var currentSpanksMood: SpanksSpriteMood {
+        switch buddyNavigationMode {
+        case .pointingAtTarget:
+            return .pawPoint
+        case .navigatingToTarget:
+            return .slap
+        case .followingCursor:
+            return companionManager.voiceState == .responding ? .purr : .idle
         }
     }
 

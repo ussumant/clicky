@@ -1,0 +1,128 @@
+{
+  "criteria" : [
+    {
+      "criterion" : "The generated UI has a clear visual thesis, one primary action, purposeful motion, and desktop/mobile verification notes.",
+      "id" : "99999999-9999-4999-8999-999999999901",
+      "isAutomated" : false,
+      "isPassed" : null,
+      "skillId" : "11111111-1111-4111-8111-111111111111"
+    }
+  ],
+  "customizationQuestion" : "What should Spanks help you build with the OpenAI frontend guide?",
+  "extractedSummary" : "OpenAI's guide turns GPT-5.4 frontend work into a deliberate workflow: start with constraints, define a visual thesis, generate a strong prompt, build with Codex, then verify with browser screenshots and litmus checks.",
+  "gotchas" : [
+    {
+      "createdAt" : "2026-04-17T00:00:00Z",
+      "description" : "If the prompt only asks for a generic page, Codex may produce safe card-heavy UI. Add visual constraints, a clear audience, and a specific mood.",
+      "fix" : "Include typography, color, composition, interaction, and verification constraints before asking Codex to build.",
+      "id" : "88888888-8888-4888-8888-888888888801",
+      "skillId" : "11111111-1111-4111-8111-111111111111",
+      "source" : "doc-extraction",
+      "stepNumber" : 3,
+      "title" : "Weak prompts create generic UI"
+    }
+  ],
+  "promptSnippets" : [
+    "Design a frontend with a strong visual thesis, restrained composition, and explicit verification.",
+    "Use browser screenshots to check desktop and mobile output before calling it done.",
+    "Avoid generic cards, weak branding, and motion that does not communicate state or story."
+  ],
+  "skill" : {
+    "agentCompletions" : 0,
+    "agentSuccessRate" : 0,
+    "confidenceScore" : 0.92,
+    "createdAt" : "2026-04-17T00:00:00Z",
+    "difficulty" : "beginner",
+    "estimatedTime" : "8min",
+    "folderPath" : "PawscriptSkills/openai-delightful-frontends.json",
+    "humanCompletions" : 0,
+    "id" : "11111111-1111-4111-8111-111111111111",
+    "name" : "openai-delightful-frontends",
+    "sourceSessionId" : null,
+    "title" : "Build a delightful frontend with GPT-5.4",
+    "track" : "frontend",
+    "updatedAt" : "2026-04-17T00:00:00Z",
+    "version" : 1,
+    "yamlContent" : "name: openai-delightful-frontends\nsteps:\n  - title: Identify the frontend job\n  - title: Set design constraints\n  - title: Generate the Codex prompt\n  - title: Run Codex in a demo workspace\n  - title: Verify in browser\n"
+  },
+  "sourceKind" : "doc",
+  "sourceURL" : "https://developers.openai.com/blog/designing-delightful-frontends-with-gpt-5-4",
+  "steps" : [
+    {
+      "action" : "verify",
+      "description" : "Read the source and identify the exact frontend job, audience, and intended emotional response.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "Do not start coding before the page has a single clear job.",
+      "id" : "22222222-2222-4222-8222-222222222201",
+      "number" : 1,
+      "screenshotPath" : null,
+      "skillId" : "11111111-1111-4111-8111-111111111111",
+      "target" : "OpenAI frontend guide",
+      "title" : "Identify the frontend job",
+      "value" : null,
+      "verification" : "The prompt names the product, audience, and primary action."
+    },
+    {
+      "action" : "configure",
+      "description" : "Choose a visual thesis: typography, color world, layout rhythm, motion role, and one thing the page must not do.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "A vague mood like modern or sleek is not enough for a distinctive result.",
+      "id" : "22222222-2222-4222-8222-222222222202",
+      "number" : 2,
+      "screenshotPath" : null,
+      "skillId" : "11111111-1111-4111-8111-111111111111",
+      "target" : "Design constraints",
+      "title" : "Set design constraints",
+      "value" : null,
+      "verification" : "The constraints specify brand, typography, composition, color, and motion."
+    },
+    {
+      "action" : "type",
+      "description" : "Generate a Codex-ready prompt that tells Codex what to build, how it should feel, what to avoid, and how to verify it.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "Include verification in the prompt so Codex does not stop after code edits.",
+      "id" : "22222222-2222-4222-8222-222222222203",
+      "number" : 3,
+      "screenshotPath" : null,
+      "skillId" : "11111111-1111-4111-8111-111111111111",
+      "target" : "Codex prompt",
+      "title" : "Generate the Codex prompt",
+      "value" : null,
+      "verification" : "The generated prompt includes build instructions and browser verification criteria."
+    },
+    {
+      "action" : "shell",
+      "description" : "Run Codex in the dedicated Pawscript demo workspace, not inside the Pawscript app repo.",
+      "estimatedTime" : "3min",
+      "gotchaText" : "Never let the demo mutate the running Pawscript app unless the user explicitly chooses that folder.",
+      "id" : "22222222-2222-4222-8222-222222222204",
+      "number" : 4,
+      "screenshotPath" : null,
+      "skillId" : "11111111-1111-4111-8111-111111111111",
+      "target" : "~/Desktop/PawscriptDemo",
+      "title" : "Run Codex safely",
+      "value" : "codex exec --full-auto",
+      "verification" : "Codex writes only inside ~/Desktop/PawscriptDemo."
+    },
+    {
+      "action" : "verify",
+      "description" : "Open the result and check desktop and mobile quality against the guide: clear hierarchy, one primary action, strong brand, and no generic filler cards.",
+      "estimatedTime" : "2min",
+      "gotchaText" : "If it looks like a default template, rerun with sharper visual constraints.",
+      "id" : "22222222-2222-4222-8222-222222222205",
+      "number" : 5,
+      "screenshotPath" : null,
+      "skillId" : "11111111-1111-4111-8111-111111111111",
+      "target" : "Browser preview",
+      "title" : "Verify the result",
+      "value" : null,
+      "verification" : "Desktop and mobile screenshots satisfy the guide's litmus checks."
+    }
+  ],
+  "toolsUsed" : [
+    "Codex CLI",
+    "GPT-5.4 frontend prompting",
+    "Browser preview",
+    "Mobile/desktop visual QA"
+  ]
+}

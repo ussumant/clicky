@@ -1,0 +1,114 @@
+{
+  "criteria" : [
+    {
+      "criterion" : "The cached YouTube extraction produces a usable Codex prompt and can be replayed without yt-dlp.",
+      "id" : "99999999-9999-4999-8999-999999999902",
+      "isAutomated" : false,
+      "isPassed" : null,
+      "skillId" : "33333333-3333-4333-8333-333333333333"
+    }
+  ],
+  "customizationQuestion" : "What should Spanks adapt from this video tutorial to your current project?",
+  "extractedSummary" : "Cached tutorial extraction for the hackathon demo. It treats the video as a Codex workflow: identify the goal, translate the tutorial into a prompt, run Codex, inspect results, and save gotchas.",
+  "gotchas" : [
+    {
+      "createdAt" : "2026-04-17T00:00:00Z",
+      "description" : "Live video extraction can fail if yt-dlp is missing or captions are unavailable.",
+      "fix" : "Use the bundled cached extraction so the demo continues smoothly.",
+      "id" : "88888888-8888-4888-8888-888888888802",
+      "skillId" : "33333333-3333-4333-8333-333333333333",
+      "source" : "youtube-cached-extraction",
+      "stepNumber" : 1,
+      "title" : "Video extraction needs a fallback"
+    }
+  ],
+  "promptSnippets" : [
+    "Convert the tutorial into a practical Codex execution plan.",
+    "Ask the user for the target use case before running the generated prompt.",
+    "Record any places where the tutorial assumed missing context."
+  ],
+  "skill" : {
+    "agentCompletions" : 0,
+    "agentSuccessRate" : 0,
+    "confidenceScore" : 0.74,
+    "createdAt" : "2026-04-17T00:00:00Z",
+    "difficulty" : "beginner",
+    "estimatedTime" : "6min",
+    "folderPath" : "PawscriptSkills/youtube-codex-tutorial.json",
+    "humanCompletions" : 0,
+    "id" : "33333333-3333-4333-8333-333333333333",
+    "name" : "youtube-codex-tutorial",
+    "sourceSessionId" : null,
+    "title" : "Turn a YouTube tutorial into a Codex run",
+    "track" : "codex",
+    "updatedAt" : "2026-04-17T00:00:00Z",
+    "version" : 1,
+    "yamlContent" : "name: youtube-codex-tutorial\nsteps:\n  - title: Load tutorial source\n  - title: Extract the core workflow\n  - title: Customize the goal\n  - title: Run or copy the Codex prompt\n"
+  },
+  "sourceKind" : "youtube",
+  "sourceURL" : "https://www.youtube.com/watch?v=C3-4llQYT8o",
+  "steps" : [
+    {
+      "action" : "navigate",
+      "description" : "Load the YouTube tutorial URL and capture the tutorial's goal, tools, and expected output.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "If captions or video extraction fail, use the cached skill instead of blocking.",
+      "id" : "44444444-4444-4444-8444-444444444401",
+      "number" : 1,
+      "screenshotPath" : null,
+      "skillId" : "33333333-3333-4333-8333-333333333333",
+      "target" : "YouTube URL",
+      "title" : "Load tutorial source",
+      "value" : "https://www.youtube.com/watch?v=C3-4llQYT8o",
+      "verification" : "Pawscript has a title, source URL, and step list."
+    },
+    {
+      "action" : "verify",
+      "description" : "Summarize the tutorial into a small sequence of actions that a human or Codex can execute.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "Avoid copying narration verbatim. Extract the durable actions.",
+      "id" : "44444444-4444-4444-8444-444444444402",
+      "number" : 2,
+      "screenshotPath" : null,
+      "skillId" : "33333333-3333-4333-8333-333333333333",
+      "target" : "Skill steps",
+      "title" : "Extract the workflow",
+      "value" : null,
+      "verification" : "The skill has concrete actions, targets, and verification text."
+    },
+    {
+      "action" : "configure",
+      "description" : "Ask the user what they want to adapt the tutorial for before generating the Codex prompt.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "Tutorials often assume one environment; customization keeps the run relevant.",
+      "id" : "44444444-4444-4444-8444-444444444403",
+      "number" : 3,
+      "screenshotPath" : null,
+      "skillId" : "33333333-3333-4333-8333-333333333333",
+      "target" : "Customization field",
+      "title" : "Customize the goal",
+      "value" : null,
+      "verification" : "The generated prompt includes the user's current project goal."
+    },
+    {
+      "action" : "shell",
+      "description" : "Run the generated prompt with Codex CLI in ~/Desktop/PawscriptDemo, or copy it for manual Codex UI use.",
+      "estimatedTime" : "3min",
+      "gotchaText" : "Keep execution isolated from the Pawscript source repo.",
+      "id" : "44444444-4444-4444-8444-444444444404",
+      "number" : 4,
+      "screenshotPath" : null,
+      "skillId" : "33333333-3333-4333-8333-333333333333",
+      "target" : "~/Desktop/PawscriptDemo",
+      "title" : "Run the Codex prompt",
+      "value" : "codex exec --full-auto",
+      "verification" : "Codex completes or Pawscript saves a gotcha explaining what help was needed."
+    }
+  ],
+  "toolsUsed" : [
+    "YouTube tutorial",
+    "yt-dlp fallback detection",
+    "Codex CLI",
+    "Pawscript cached skill"
+  ]
+}

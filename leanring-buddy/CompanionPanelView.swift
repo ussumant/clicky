@@ -13,6 +13,11 @@ import SwiftUI
 struct CompanionPanelView: View {
     @ObservedObject var companionManager: CompanionManager
     @State private var emailInput: String = ""
+    @State private var isOpenAISettingsExpanded = false
+    @State private var openAIAPIKeyInput = ""
+    @State private var openAITTSModelInput = OpenAISettingsStore.defaultTTSModel
+    @State private var openAITTSVoiceInput = OpenAISettingsStore.defaultTTSVoice
+    @State private var openAITTSInstructionsInput = OpenAISettingsStore.defaultTTSInstructions
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -29,19 +34,33 @@ struct CompanionPanelView: View {
                 Spacer()
                     .frame(height: 12)
 
-                modelPickerRow
+                PawscriptPanelView(pawscriptManager: companionManager.pawscriptExecutionManager)
+                    .padding(.horizontal, 16)
+
+                Spacer()
+                    .frame(height: 12)
+
+                assistantProviderRow
                     .padding(.horizontal, 16)
 
                 Spacer()
                     .frame(height: 4)
 
-                backendPickerRow
-                    .padding(.horizontal, 16)
+                if companionManager.selectedBackend != "codex" {
+                    modelPickerRow
+                        .padding(.horizontal, 16)
 
-                Spacer()
-                    .frame(height: 4)
+                    Spacer()
+                        .frame(height: 4)
+                }
 
                 ttsPickerRow
+                    .padding(.horizontal, 16)
+
+                Spacer()
+                    .frame(height: 4)
+
+                openAISettingsSection
                     .padding(.horizontal, 16)
 
                 Spacer()
@@ -612,25 +631,125 @@ struct CompanionPanelView: View {
     }
 
     private var speechToTextProviderRow: some View {
-        HStack {
-            HStack(spacing: 8) {
-                Image(systemName: "mic.badge.waveform")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(DS.Colors.textTertiary)
-                    .frame(width: 16)
+        VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "mic.badge.waveform")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(DS.Colors.textTertiary)
+                        .frame(width: 16)
 
-                Text("Speech to Text")
+                    Text("Speech to Text")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(DS.Colors.textSecondary)
+                }
+
+                Spacer()
+
+                Text(companionManager.buddyDictationManager.transcriptionProviderDisplayName)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(DS.Colors.textTertiary)
+            }
+
+            if let lastErrorMessage = companionManager.buddyDictationManager.lastErrorMessage,
+               !lastErrorMessage.isEmpty {
+                Text(lastErrorMessage)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(Color.orange.opacity(0.9))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    // MARK: - Assistant Picker
+
+    private var assistantProviderRow: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Assistant")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(DS.Colors.textSecondary)
+
+                Text(assistantProviderSubtitle)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(DS.Colors.textTertiary)
+                    .lineLimit(1)
             }
 
             Spacer()
 
-            Text(companionManager.buddyDictationManager.transcriptionProviderDisplayName)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundColor(DS.Colors.textTertiary)
+            Menu {
+                Button(action: { companionManager.setSelectedBackend("codex") }) {
+                    Label("Codex", systemImage: companionManager.selectedBackend == "codex" ? "checkmark" : "terminal")
+                }
+
+                Button(action: { companionManager.setSelectedBackend("api") }) {
+                    Label("Claude API", systemImage: companionManager.selectedBackend == "api" ? "checkmark" : "cloud")
+                }
+
+                Button(action: { companionManager.setSelectedBackend("cli") }) {
+                    Label("Claude Code", systemImage: companionManager.selectedBackend == "cli" ? "checkmark" : "hammer")
+                }
+            } label: {
+                HStack(spacing: 7) {
+                    Circle()
+                        .fill(assistantProviderStatusColor)
+                        .frame(width: 6, height: 6)
+
+                    Text(assistantProviderLabel)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(DS.Colors.textPrimary)
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(DS.Colors.textTertiary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(Color.white.opacity(0.08))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .stroke(DS.Colors.borderSubtle, lineWidth: 0.5)
+                )
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
         }
         .padding(.vertical, 4)
+    }
+
+    private var assistantProviderLabel: String {
+        switch companionManager.selectedBackend {
+        case "codex": return "Codex"
+        case "cli": return "Claude Code"
+        default: return "Claude API"
+        }
+    }
+
+    private var assistantProviderSubtitle: String {
+        switch companionManager.selectedBackend {
+        case "codex":
+            return "uses your local Codex login"
+        case "cli":
+            return companionManager.isCLIBackendAvailable ? "uses Claude Code CLI" : "Claude CLI missing"
+        default:
+            return "uses worker API key"
+        }
+    }
+
+    private var assistantProviderStatusColor: Color {
+        switch companionManager.selectedBackend {
+        case "codex":
+            return companionManager.isCodexBackendAvailable ? Color.green : Color.red
+        case "cli":
+            return companionManager.isCLIBackendAvailable ? Color.green : Color.red
+        default:
+            return Color.green
+        }
     }
 
     // MARK: - Model Picker
@@ -643,39 +762,46 @@ struct CompanionPanelView: View {
 
             Spacer()
 
-            HStack(spacing: 0) {
-                modelOptionButton(label: "Sonnet", modelID: "claude-sonnet-4-6")
-                modelOptionButton(label: "Opus", modelID: "claude-opus-4-6")
+            Menu {
+                Button(action: { companionManager.setSelectedModel("claude-sonnet-4-6") }) {
+                    Label("Sonnet", systemImage: companionManager.selectedModel == "claude-sonnet-4-6" ? "checkmark" : "sparkles")
+                }
+
+                Button(action: { companionManager.setSelectedModel("claude-opus-4-6") }) {
+                    Label("Opus", systemImage: companionManager.selectedModel == "claude-opus-4-6" ? "checkmark" : "sparkles")
+                }
+            } label: {
+                HStack(spacing: 7) {
+                    Text(selectedModelLabel)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(DS.Colors.textPrimary)
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(DS.Colors.textTertiary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(Color.white.opacity(0.08))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .stroke(DS.Colors.borderSubtle, lineWidth: 0.5)
+                )
             }
-            .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.white.opacity(0.06))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .stroke(DS.Colors.borderSubtle, lineWidth: 0.5)
-            )
+            .menuStyle(.borderlessButton)
+            .fixedSize()
         }
         .padding(.vertical, 4)
     }
 
-    private func modelOptionButton(label: String, modelID: String) -> some View {
-        let isSelected = companionManager.selectedModel == modelID
-        return Button(action: {
-            companionManager.setSelectedModel(modelID)
-        }) {
-            Text(label)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundColor(isSelected ? DS.Colors.textPrimary : DS.Colors.textTertiary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
-                        .fill(isSelected ? Color.white.opacity(0.1) : Color.clear)
-                )
+    private var selectedModelLabel: String {
+        switch companionManager.selectedModel {
+        case "claude-opus-4-6": return "Opus"
+        default: return "Sonnet"
         }
-        .buttonStyle(.plain)
-        .pointerCursor()
     }
 
     // MARK: - Subtitles Toggle
@@ -771,25 +897,36 @@ struct CompanionPanelView: View {
     // MARK: - ASR Picker
 
     private var asrPickerRow: some View {
-        HStack {
-            Text("Listen")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(DS.Colors.textSecondary)
+        VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Text("Listen")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(DS.Colors.textSecondary)
 
-            Spacer()
+                Spacer()
 
-            HStack(spacing: 0) {
-                asrOptionButton(label: "Cloud", asrID: "cloud")
-                asrOptionButton(label: "Local", asrID: "local")
+                HStack(spacing: 0) {
+                    asrOptionButton(label: "OpenAI", asrID: "openai")
+                    asrOptionButton(label: "Cloud", asrID: "cloud")
+                    asrOptionButton(label: "Local", asrID: "local")
+                }
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(Color.white.opacity(0.06))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(DS.Colors.borderSubtle, lineWidth: 0.5)
+                )
             }
-            .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.white.opacity(0.06))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .stroke(DS.Colors.borderSubtle, lineWidth: 0.5)
-            )
+
+            if let lastErrorMessage = companionManager.buddyDictationManager.lastErrorMessage,
+               !lastErrorMessage.isEmpty {
+                Text(lastErrorMessage)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(Color.orange.opacity(0.9))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(.vertical, 4)
     }
@@ -824,7 +961,8 @@ struct CompanionPanelView: View {
             Spacer()
 
             HStack(spacing: 0) {
-                ttsOptionButton(label: "Cloud", ttsID: "cloud")
+                ttsOptionButton(label: "OpenAI", ttsID: "openai")
+                ttsOptionButton(label: "11Labs", ttsID: "cloud")
                 ttsOptionButton(label: "Local", ttsID: "local")
             }
             .background(
@@ -856,6 +994,183 @@ struct CompanionPanelView: View {
         }
         .buttonStyle(.plain)
         .pointerCursor()
+    }
+
+    // MARK: - OpenAI Settings
+
+    private var openAISettingsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.18)) {
+                    isOpenAISettingsExpanded.toggle()
+                }
+            }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "key.fill")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(companionManager.hasOpenAIAPIKey ? Color.green.opacity(0.9) : DS.Colors.textTertiary)
+
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("OpenAI")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(DS.Colors.textSecondary)
+
+                        Text("Voice + transcription key")
+                            .font(.system(size: 10))
+                            .foregroundColor(DS.Colors.textTertiary)
+                    }
+
+                    Spacer()
+
+                    Text(companionManager.openAIKeyStatusText)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(companionManager.hasOpenAIAPIKey ? Color.green.opacity(0.85) : DS.Colors.textTertiary)
+
+                    Image(systemName: isOpenAISettingsExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(DS.Colors.textTertiary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .pointerCursor()
+
+            if isOpenAISettingsExpanded {
+                VStack(alignment: .leading, spacing: 8) {
+                    SecureField("Paste OpenAI API key", text: $openAIAPIKeyInput)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 11))
+                        .foregroundColor(DS.Colors.textPrimary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(openAIFieldBackground)
+
+                    HStack(spacing: 8) {
+                        Button(action: {
+                            companionManager.saveOpenAIAPIKey(openAIAPIKeyInput)
+                            openAIAPIKeyInput = ""
+                        }) {
+                            Text("Save key")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(DS.Colors.textOnAccent)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 7)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                        .fill(DS.Colors.accent)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .pointerCursor()
+
+                        Button(action: {
+                            companionManager.clearOpenAIAPIKey()
+                            openAIAPIKeyInput = ""
+                        }) {
+                            Text("Clear")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(DS.Colors.textSecondary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 7)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                        .fill(Color.white.opacity(0.07))
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .pointerCursor()
+                    }
+
+                    openAITextSettingRow(
+                        label: "Model",
+                        placeholder: OpenAISettingsStore.defaultTTSModel,
+                        text: $openAITTSModelInput,
+                        save: { companionManager.setOpenAITTSModel(openAITTSModelInput) }
+                    )
+
+                    openAITextSettingRow(
+                        label: "Voice",
+                        placeholder: OpenAISettingsStore.defaultTTSVoice,
+                        text: $openAITTSVoiceInput,
+                        save: { companionManager.setOpenAITTSVoice(openAITTSVoiceInput) }
+                    )
+
+                    openAITextSettingRow(
+                        label: "Style",
+                        placeholder: "warm, concise, cat-like",
+                        text: $openAITTSInstructionsInput,
+                        save: { companionManager.setOpenAITTSInstructions(openAITTSInstructionsInput) }
+                    )
+
+                    if let message = companionManager.openAISettingsMessage {
+                        Text(message)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(message.lowercased().contains("could not") ? Color.red.opacity(0.9) : DS.Colors.textTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: DS.CornerRadius.medium, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.CornerRadius.medium, style: .continuous)
+                .stroke(DS.Colors.borderSubtle, lineWidth: 0.5)
+        )
+        .onAppear {
+            openAITTSModelInput = companionManager.openAITTSModel
+            openAITTSVoiceInput = companionManager.openAITTSVoice
+            openAITTSInstructionsInput = companionManager.openAITTSInstructions
+        }
+    }
+
+    private func openAITextSettingRow(
+        label: String,
+        placeholder: String,
+        text: Binding<String>,
+        save: @escaping () -> Void
+    ) -> some View {
+        HStack(spacing: 8) {
+            Text(label)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(DS.Colors.textTertiary)
+                .frame(width: 36, alignment: .leading)
+
+            TextField(placeholder, text: text)
+                .textFieldStyle(.plain)
+                .font(.system(size: 11))
+                .foregroundColor(DS.Colors.textPrimary)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 6)
+                .background(openAIFieldBackground)
+
+            Button(action: save) {
+                Text("Save")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(DS.Colors.textSecondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(Color.white.opacity(0.07))
+                    )
+            }
+            .buttonStyle(.plain)
+            .pointerCursor()
+        }
+    }
+
+    private var openAIFieldBackground: some View {
+        RoundedRectangle(cornerRadius: 7, style: .continuous)
+            .fill(Color.black.opacity(0.2))
+            .overlay(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .stroke(DS.Colors.borderSubtle, lineWidth: 0.5)
+            )
     }
 
     // MARK: - Backend Picker

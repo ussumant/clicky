@@ -1,0 +1,227 @@
+{
+  "criteria" : [
+    {
+      "criterion" : "A Browser Use agent can complete the public steps, pause for login or low-confidence UI states, and hand control back to the user for correction without losing progress.",
+      "id" : "99999999-9999-4999-8999-999999999903",
+      "isAutomated" : false,
+      "isPassed" : null,
+      "skillId" : "55555555-5555-4555-8555-555555555555"
+    }
+  ],
+  "customizationQuestion" : "What kind of graphic should Spanks help you make with Paper Shaders, and should the agent move fast or pause before changing the canvas?",
+  "extractedSummary" : "The Paper Shaders walkthrough becomes a browser-agent workflow: open Paper Shaders, enter an editable Paper canvas, pause for login or missing editor state, place a Warp shader, choose and tune a preset, export React code, add a Fluted Glass image filter, hand off if image capture is ambiguous, chain a Halftone shader, and optionally vectorize a flat image.",
+  "gotchas" : [
+    {
+      "createdAt" : "2026-04-16T00:00:00Z",
+      "description" : "Presets are useful starting points, but a design can feel generic if the preset is not tuned.",
+      "fix" : "Choose a preset, then adjust parameters until the shader supports the specific graphic.",
+      "id" : "88888888-8888-4888-8888-888888888803",
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "source" : "youtube-captions-v1",
+      "stepNumber" : 2,
+      "title" : "Do not stop at presets"
+    },
+    {
+      "createdAt" : "2026-04-16T00:00:00Z",
+      "description" : "Chained shaders can become visually noisy when every layer is strong.",
+      "fix" : "Reduce the strength of one shader or return to the original image and apply only the strongest effect.",
+      "id" : "88888888-8888-4888-8888-888888888804",
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "source" : "youtube-captions-v1",
+      "stepNumber" : 6,
+      "title" : "Layer effects carefully"
+    },
+    {
+      "createdAt" : "2026-04-16T00:00:00Z",
+      "description" : "The Paper editor, shader library, and export menu may expose different UI labels depending on account state or product changes.",
+      "fix" : "If the agent cannot identify the target control with high confidence, pause and ask the user to click the correct control, then continue from the resulting screen.",
+      "id" : "88888888-8888-4888-8888-888888888805",
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "source" : "browser-use-hardening",
+      "stepNumber" : 1,
+      "title" : "Use handoff when UI confidence drops"
+    }
+  ],
+  "prerequisites" : [
+    {
+      "actionLabel" : "Signed in",
+      "detail" : "The video operates inside the Paper editor. If the browser shows marketing, signup, login, or an empty workspace instead of an editable canvas, pause and ask the user to sign in or open a canvas.",
+      "id" : "77777777-7777-4777-8777-777777777703",
+      "isBlocking" : true,
+      "kind" : "login",
+      "source" : "youtube-captions-v1",
+      "stepNumber" : 1,
+      "title" : "Paper editor access"
+    },
+    {
+      "actionLabel" : "Image ready",
+      "detail" : "Have an image ready to upload, or let the user approve a generated image before the agent pulls it into the image-filter shader.",
+      "id" : "77777777-7777-4777-8777-777777777704",
+      "isBlocking" : false,
+      "kind" : "asset",
+      "source" : "youtube-captions-v1",
+      "stepNumber" : 6,
+      "title" : "Prepare an image source"
+    },
+    {
+      "actionLabel" : "Fast handoff OK",
+      "detail" : "Tell the user that the agent will move quickly through obvious UI states, but will pause when it cannot confidently identify a button, shader control, image source, or export menu.",
+      "id" : "77777777-7777-4777-8777-777777777705",
+      "isBlocking" : false,
+      "kind" : "safety",
+      "source" : "browser-use-hardening",
+      "stepNumber" : 1,
+      "title" : "Confirm correction handoff"
+    }
+  ],
+  "promptSnippets" : [
+    "Move fast through visible Paper controls, but pause for human correction when confidence is below 0.75 or the screen differs from the expected state.",
+    "If Paper asks for login, signup, payment, or project selection, stop and ask the user to complete that step manually.",
+    "Prefer visible labels: Warp, Presets, Speed, Copy as React, Fluted Glass, Edit, eyedropper, Halftone, Vintage, Vectorize.",
+    "After every material canvas change, verify the visible result before continuing.",
+    "If image capture, shader chaining, or export is ambiguous, ask the user to click or select the target, then resume from the new screen."
+  ],
+  "skill" : {
+    "agentCompletions" : 0,
+    "agentSuccessRate" : 0,
+    "confidenceScore" : 0.86,
+    "createdAt" : "2026-04-16T00:00:00Z",
+    "difficulty" : "beginner",
+    "estimatedTime" : "10min",
+    "folderPath" : "PawscriptSkills/paper-shaders-design-guide.json",
+    "humanCompletions" : 0,
+    "id" : "55555555-5555-4555-8555-555555555555",
+    "name" : "paper-shaders-design-guide",
+    "sourceSessionId" : null,
+    "title" : "Use Paper Shaders with Browser Use handoff",
+    "track" : "design",
+    "updatedAt" : "2026-04-16T00:00:00Z",
+    "version" : 1,
+    "yamlContent" : "name: paper-shaders-design-guide\nsteps:\n  - title: Open an editable Paper canvas\n  - title: Handle login or canvas handoff\n  - title: Add or select Warp shader\n  - title: Choose and tune a preset\n  - title: Freeze motion or export React\n  - title: Add Fluted Glass image filter\n  - title: Chain Halftone if useful\n  - title: Vectorize and verify final asset\n"
+  },
+  "sourceKind" : "youtube",
+  "sourceURL" : "https://www.youtube.com/watch?v=Q_bd7BFh0XY",
+  "steps" : [
+    {
+      "action" : "navigate",
+      "description" : "Navigate to Paper Shaders, then look for an action that opens the shader in Paper or an editable Paper canvas. If the screen is a marketing page only, use the most direct visible open, try, remix, or copy-to-Paper action.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "If the browser lands on login, signup, pricing, or a static gallery, pause and ask the user to open an editable Paper canvas.",
+      "id" : "66666666-6666-4666-8666-666666666601",
+      "number" : 1,
+      "screenshotPath" : null,
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "target" : "https://shaders.paper.design",
+      "title" : "Open an editable Paper canvas",
+      "value" : "https://shaders.paper.design",
+      "verification" : "Continue only when an editable canvas or shader editor is visible. If not, hand off to the user and resume after they open the canvas."
+    },
+    {
+      "action" : "conditional",
+      "description" : "Check whether the user is signed in and whether a canvas with shader controls is visible. If account, file, or canvas setup blocks progress, ask the user to complete it manually.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "Do not attempt to create accounts, enter private credentials, or change billing settings.",
+      "id" : "66666666-6666-4666-8666-666666666602",
+      "number" : 2,
+      "screenshotPath" : null,
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "target" : "Paper editor state",
+      "title" : "Handle login or canvas handoff",
+      "value" : "Pause if confidence is below 0.75",
+      "verification" : "The next screen has an editable canvas, a selected object, or visible shader controls. If the user corrected the screen, continue from that state."
+    },
+    {
+      "action" : "select",
+      "description" : "Find a Warp shader in the current canvas or shader library. If a Warp shader is already selected, keep it. Otherwise, add or open Warp from the visible shader list.",
+      "estimatedTime" : "2min",
+      "gotchaText" : "If Warp is not visible, choose the first available abstract or generative shader and tell the user what changed.",
+      "id" : "66666666-6666-4666-8666-666666666603",
+      "number" : 3,
+      "screenshotPath" : null,
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "target" : "Warp shader",
+      "title" : "Add or select Warp shader",
+      "value" : "Warp",
+      "verification" : "A Warp or comparable generative shader is selected and its preset or parameter controls are visible."
+    },
+    {
+      "action" : "configure",
+      "description" : "Open the preset control, choose a visually distinct preset, then adjust one or two obvious parameters such as scale, intensity, shape, spacing, or distortion. Move fast, but do not drag unknown controls repeatedly.",
+      "estimatedTime" : "2min",
+      "gotchaText" : "If a slider label or control purpose is unclear, make one small adjustment and verify the visual change before continuing.",
+      "id" : "66666666-6666-4666-8666-666666666604",
+      "number" : 4,
+      "screenshotPath" : null,
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "target" : "Presets and shader parameter controls",
+      "title" : "Choose and tune a preset",
+      "value" : "Pick one preset, then adjust 1-2 controls",
+      "verification" : "The selected shader visibly changes from the starting preset, and the canvas still looks usable."
+    },
+    {
+      "action" : "configure",
+      "description" : "If a Speed control is visible, set it to zero when the user wants a static texture. If an export menu or Copy as React button is visible, copy the shader code. If export is hidden, skip export and continue after noting it.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "Do not get stuck hunting for export. The core guide can continue without a React copy.",
+      "id" : "66666666-6666-4666-8666-666666666605",
+      "number" : 5,
+      "screenshotPath" : null,
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "target" : "Speed control or Copy as React",
+      "title" : "Freeze motion or export React",
+      "value" : "Speed 0 or Copy as React",
+      "verification" : "Either motion is intentionally set, React code has been copied, or the step was skipped with a clear note."
+    },
+    {
+      "action" : "configure",
+      "description" : "Add or select the Fluted Glass image filter. Use Edit to upload an image, the eyedropper to capture a visible image, or Paper image generation if available. Pause for user correction if the image source is ambiguous.",
+      "estimatedTime" : "2min",
+      "gotchaText" : "Image upload and eyedropper selection are likely handoff points. Ask the user to pick the image if the target is not obvious.",
+      "id" : "66666666-6666-4666-8666-666666666606",
+      "number" : 6,
+      "screenshotPath" : null,
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "target" : "Fluted Glass image input",
+      "title" : "Add Fluted Glass image filter",
+      "value" : "Fluted Glass",
+      "verification" : "An image appears inside the Fluted Glass shader and the filter visibly changes the image."
+    },
+    {
+      "action" : "configure",
+      "description" : "If the filtered image looks stable, add a Halftone shader or choose a visible halftone or vintage preset. Skip this step if the canvas is already visually busy.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "The correct fast move is sometimes to skip the extra shader. Ask the user if the result is already good enough.",
+      "id" : "66666666-6666-4666-8666-666666666607",
+      "number" : 7,
+      "screenshotPath" : null,
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "target" : "Halftone shader or vintage preset",
+      "title" : "Chain Halftone if useful",
+      "value" : "Halftone or Vintage",
+      "verification" : "The added shader makes the graphic more distinctive without obscuring the image. If not, undo or ask the user whether to keep it."
+    },
+    {
+      "action" : "verify",
+      "description" : "If a flat generated image is selected and Vectorize is visible in the context menu, run Vectorize. Otherwise skip vectorization and verify the final asset format with the user.",
+      "estimatedTime" : "2min",
+      "gotchaText" : "Right-click context menus are brittle for browser agents. If Vectorize is not visible immediately, ask the user to open it or skip.",
+      "id" : "66666666-6666-4666-8666-666666666608",
+      "number" : 8,
+      "screenshotPath" : null,
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "target" : "Vectorize and final asset",
+      "title" : "Vectorize and verify final asset",
+      "value" : "Vectorize if visible",
+      "verification" : "The user confirms the result and export path: live shader, static texture, React code, or SVG."
+    }
+  ],
+  "toolsUsed" : [
+    "Paper",
+    "Paper Shaders",
+    "Shader presets",
+    "Image generation",
+    "Eyedropper image capture",
+    "Copy as React",
+    "Vectorize"
+  ]
+}

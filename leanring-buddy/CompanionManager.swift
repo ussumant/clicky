@@ -65,6 +65,7 @@ final class CompanionManager: ObservableObject {
     let buddyDictationManager = BuddyDictationManager()
     let globalPushToTalkShortcutMonitor = GlobalPushToTalkShortcutMonitor()
     let overlayWindowManager = OverlayWindowManager()
+    @Published var pawscriptExecutionManager = PawscriptExecutionManager()
     // Response text is now displayed inline on the cursor overlay via
     // streamingResponseText, so no separate response overlay manager is needed.
 
@@ -80,6 +81,10 @@ final class CompanionManager: ObservableObject {
         return ElevenLabsTTSClient(proxyURL: "\(Self.workerBaseURL)/tts")
     }()
 
+    private lazy var openAITTSClient: OpenAITTSClient = {
+        return OpenAITTSClient()
+    }()
+
     /// Conversation history so Claude remembers prior exchanges within a session.
     /// Each entry is the user's transcript and Claude's response.
     private var conversationHistory: [(userTranscript: String, assistantResponse: String)] = []
@@ -93,6 +98,7 @@ final class CompanionManager: ObservableObject {
     private var audioPowerCancellable: AnyCancellable?
     private var accessibilityCheckTimer: Timer?
     private var pendingKeyboardShortcutStartTask: Task<Void, Never>?
+    private var pawscriptSpeechTask: Task<Void, Never>?
     /// Scheduled hide for transient cursor mode — cancelled if the user
     /// speaks again before the delay elapses.
     private var transientHideTask: Task<Void, Never>?
@@ -144,16 +150,74 @@ final class CompanionManager: ObservableObject {
         UserDefaults.standard.set(backend, forKey: "selectedChatBackend")
     }
 
-    /// The TTS backend: "cloud" (ElevenLabs via Worker) or "local" (macOS AVSpeechSynthesizer).
+    /// The TTS backend: "openai", "cloud" (ElevenLabs via Worker), or "local" (macOS AVSpeechSynthesizer).
     @Published var selectedTTSBackend: String = UserDefaults.standard.string(forKey: "selectedTTSBackend") ?? "local"
 
     private lazy var localTTSClient: LocalTTSClient = {
         return LocalTTSClient()
     }()
 
+    @Published private(set) var hasOpenAIAPIKey: Bool = OpenAISettingsStore.hasAPIKey
+    @Published private(set) var openAIKeyStatusText: String = OpenAISettingsStore.maskedAPIKeyDescription ?? "not saved"
+    @Published var openAITTSModel: String = OpenAISettingsStore.ttsModel
+    @Published var openAITTSVoice: String = OpenAISettingsStore.ttsVoice
+    @Published var openAITTSInstructions: String = OpenAISettingsStore.ttsInstructions
+    @Published private(set) var openAISettingsMessage: String?
+
     func setSelectedTTSBackend(_ backend: String) {
         selectedTTSBackend = backend
         UserDefaults.standard.set(backend, forKey: "selectedTTSBackend")
+    }
+
+    func saveOpenAIAPIKey(_ apiKey: String) {
+        do {
+            try OpenAISettingsStore.saveAPIKey(apiKey)
+            refreshOpenAISettingsState(message: "OpenAI key saved.")
+            if selectedASRBackend == "openai" {
+                buddyDictationManager.switchTranscriptionProvider(to: "openai")
+            }
+        } catch {
+            refreshOpenAISettingsState(message: error.localizedDescription)
+        }
+    }
+
+    func clearOpenAIAPIKey() {
+        do {
+            try OpenAISettingsStore.clearAPIKey()
+            refreshOpenAISettingsState(message: "OpenAI key cleared.")
+            if selectedASRBackend == "openai" {
+                buddyDictationManager.switchTranscriptionProvider(to: "openai")
+            }
+        } catch {
+            refreshOpenAISettingsState(message: error.localizedDescription)
+        }
+    }
+
+    func setOpenAITTSModel(_ model: String) {
+        OpenAISettingsStore.ttsModel = model
+        openAITTSModel = OpenAISettingsStore.ttsModel
+        openAISettingsMessage = "OpenAI voice model saved."
+    }
+
+    func setOpenAITTSVoice(_ voice: String) {
+        OpenAISettingsStore.ttsVoice = voice
+        openAITTSVoice = OpenAISettingsStore.ttsVoice
+        openAISettingsMessage = "OpenAI voice saved."
+    }
+
+    func setOpenAITTSInstructions(_ instructions: String) {
+        OpenAISettingsStore.ttsInstructions = instructions
+        openAITTSInstructions = OpenAISettingsStore.ttsInstructions
+        openAISettingsMessage = "OpenAI voice style saved."
+    }
+
+    private func refreshOpenAISettingsState(message: String? = nil) {
+        hasOpenAIAPIKey = OpenAISettingsStore.hasAPIKey
+        openAIKeyStatusText = OpenAISettingsStore.maskedAPIKeyDescription ?? "not saved"
+        openAITTSModel = OpenAISettingsStore.ttsModel
+        openAITTSVoice = OpenAISettingsStore.ttsVoice
+        openAITTSInstructions = OpenAISettingsStore.ttsInstructions
+        openAISettingsMessage = message
     }
 
     /// The ASR backend: "cloud" (AssemblyAI) or "local" (Apple Speech on-device).
@@ -239,6 +303,32 @@ final class CompanionManager: ObservableObject {
         subtitleGroupIndex = 0
     }
 
+    private func stopAllTTSPlayback() {
+        elevenLabsTTSClient.stopPlayback()
+        openAITTSClient.stopPlayback()
+        localTTSClient.stopPlayback()
+    }
+
+    private var isAnyTTSPlaying: Bool {
+        elevenLabsTTSClient.isPlaying || openAITTSClient.isPlaying || localTTSClient.isPlaying
+    }
+
+    private func speakTextWithSelectedTTS(_ text: String) async throws {
+        switch selectedTTSBackend {
+        case "openai":
+            do {
+                try await openAITTSClient.speakText(text)
+            } catch {
+                print("⚠️ OpenAI TTS unavailable, falling back to local voice: \(error.localizedDescription)")
+                try await localTTSClient.speakText(text)
+            }
+        case "cloud":
+            try await elevenLabsTTSClient.speakText(text)
+        default:
+            try await localTTSClient.speakText(text)
+        }
+    }
+
     /// User preference for whether the Clicky cursor should be shown.
     /// When toggled off, the overlay is hidden and push-to-talk is disabled.
     /// Persisted to UserDefaults so the choice survives app restarts.
@@ -298,17 +388,14 @@ final class CompanionManager: ObservableObject {
     func start() {
         refreshAllPermissions()
         print("🔑 Clicky start — accessibility: \(hasAccessibilityPermission), screen: \(hasScreenRecordingPermission), mic: \(hasMicrophonePermission), screenContent: \(hasScreenContentPermission), onboarded: \(hasCompletedOnboarding)")
+        configurePawscriptCallbacks()
         startPermissionPolling()
         bindVoiceStateObservation()
         bindAudioPowerLevel()
         bindShortcutTransitions()
 
         // Sync the transcription provider with the persisted ASR backend setting.
-        // BuddyDictationManager defaults to AssemblyAI at init, but if the user
-        // has selected local ASR we need to switch before the first push-to-talk.
-        if selectedASRBackend == "local" {
-            buddyDictationManager.switchTranscriptionProvider(to: "local")
-        }
+        buddyDictationManager.switchTranscriptionProvider(to: selectedASRBackend)
 
         // Eagerly touch the Claude API so its TLS warmup handshake completes
         // well before the onboarding demo fires at ~40s into the video.
@@ -428,6 +515,8 @@ final class CompanionManager: ObservableObject {
 
         currentResponseTask?.cancel()
         currentResponseTask = nil
+        pawscriptSpeechTask?.cancel()
+        pawscriptSpeechTask = nil
         shortcutTransitionCancellable?.cancel()
         voiceStateCancellable?.cancel()
         audioPowerCancellable?.cancel()
@@ -603,6 +692,95 @@ final class CompanionManager: ObservableObject {
             }
     }
 
+    private func configurePawscriptCallbacks() {
+        pawscriptExecutionManager.statusNarrationHandler = { [weak self] text in
+            Task { @MainActor [weak self] in
+                self?.speakPawscriptStatus(text)
+            }
+        }
+        pawscriptExecutionManager.pointAtCurrentStepHandler = { [weak self] step in
+            Task { @MainActor [weak self] in
+                self?.pointAtPawscriptStep(step)
+            }
+        }
+        pawscriptExecutionManager.pointAtScreenMatchHandler = { [weak self] step, match in
+            Task { @MainActor [weak self] in
+                self?.pointAtPawscriptMatch(step: step, match: match)
+            }
+        }
+    }
+
+    func speakPawscriptStatus(_ text: String) {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else { return }
+
+        pawscriptSpeechTask?.cancel()
+        stopAllTTSPlayback()
+        stopSubtitles()
+
+        pawscriptSpeechTask = Task {
+            voiceState = .processing
+            do {
+                try await speakTextWithSelectedTTS(trimmedText)
+                voiceState = .responding
+                startSubtitles(for: trimmedText)
+
+                while isAnyTTSPlaying {
+                    try? await Task.sleep(nanoseconds: 200_000_000)
+                    guard !Task.isCancelled else { return }
+                }
+            } catch {
+                print("⚠️ Pawscript speech error: \(error)")
+            }
+
+            if !Task.isCancelled {
+                stopSubtitles()
+                voiceState = .idle
+                scheduleTransientHideIfNeeded()
+            }
+        }
+    }
+
+    func pointAtPawscriptStep(_ step: SkillStep) {
+        let mouseLocation = NSEvent.mouseLocation
+        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) })
+            ?? NSScreen.main else {
+            return
+        }
+
+        let targetLocation = CGPoint(
+            x: min(max(mouseLocation.x + 90, screen.frame.minX + 40), screen.frame.maxX - 40),
+            y: min(max(mouseLocation.y - 48, screen.frame.minY + 40), screen.frame.maxY - 40)
+        )
+
+        detectedElementBubbleText = step.title
+        detectedElementScreenLocation = targetLocation
+        detectedElementDisplayFrame = screen.frame
+        moveSystemCursor(to: targetLocation)
+    }
+
+    func pointAtPawscriptMatch(step: SkillStep, match: PawscriptScreenMatch) {
+        guard let x = match.x, let y = match.y else {
+            pointAtPawscriptStep(step)
+            return
+        }
+
+        let targetLocation = CGPoint(x: x, y: y)
+        let screen = NSScreen.screens.first(where: { $0.frame.contains(targetLocation) }) ?? NSScreen.main
+
+        detectedElementBubbleText = match.hint.isEmpty ? step.title : match.hint
+        detectedElementScreenLocation = targetLocation
+        detectedElementDisplayFrame = screen?.frame
+        moveSystemCursor(to: targetLocation)
+    }
+
+    private func moveSystemCursor(to appKitPoint: CGPoint) {
+        guard let maxY = NSScreen.screens.map(\.frame.maxY).max() else { return }
+        let quartzPoint = CGPoint(x: appKitPoint.x, y: maxY - appKitPoint.y)
+        CGWarpMouseCursorPosition(quartzPoint)
+        CGAssociateMouseAndMouseCursorPosition(boolean_t(1))
+    }
+
     private func handleShortcutTransition(_ transition: BuddyPushToTalkShortcut.ShortcutTransition) {
         switch transition {
         case .pressed:
@@ -626,8 +804,7 @@ final class CompanionManager: ObservableObject {
 
             // Cancel any in-progress response and TTS from a previous utterance
             currentResponseTask?.cancel()
-            elevenLabsTTSClient.stopPlayback()
-            localTTSClient.stopPlayback()
+            stopAllTTSPlayback()
             clearDetectedElementLocation()
 
             // Dismiss the onboarding prompt if it's showing
@@ -666,6 +843,11 @@ final class CompanionManager: ObservableObject {
                             self?.voiceState = .idle
                             self?.scheduleTransientHideIfNeeded()
                         } else {
+                            if self?.handlePawscriptShortcutPhrase(finalTranscript) == true {
+                                self?.voiceState = .idle
+                                self?.scheduleTransientHideIfNeeded()
+                                return
+                            }
                             self?.sendTranscriptToClaudeWithScreenshot(transcript: finalTranscript)
                         }
                     }
@@ -686,6 +868,79 @@ final class CompanionManager: ObservableObject {
     }
 
     // MARK: - Companion Prompt
+
+    private func handlePawscriptShortcutPhrase(_ transcript: String) -> Bool {
+        let normalized = transcript
+            .lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let stuckPhrases = [
+            "i'm stuck",
+            "im stuck",
+            "i am stuck",
+            "spanks i'm stuck",
+            "spanks im stuck",
+            "this is stuck",
+            "save gotcha",
+            "mark stuck"
+        ]
+
+        if pawscriptExecutionManager.activeMode == .doTogether,
+           pawscriptExecutionManager.runState == .running,
+           stuckPhrases.contains(where: { normalized.contains($0) }) {
+            pawscriptExecutionManager.markCurrentStepStuck(source: "voice")
+            return true
+        }
+
+        let continuePhrases = [
+            "spanks continue",
+            "continue",
+            "keep going",
+            "resume",
+            "spanks resume",
+            "i'm done",
+            "im done",
+            "i am done",
+            "i signed in",
+            "i'm signed in",
+            "im signed in",
+            "signed in",
+            "session is ready",
+            "i'm ready",
+            "im ready",
+            "ready"
+        ]
+
+        if pawscriptExecutionManager.browserUseHandoffActive,
+           continuePhrases.contains(where: { normalized.contains($0) }) {
+            pawscriptExecutionManager.continueBrowserUseAfterHumanHelp()
+            return true
+        }
+
+        let stopBrowserPhrases = [
+            "stop spanks",
+            "spanks stop",
+            "stop browser use",
+            "stop automation",
+            "cancel automation"
+        ]
+
+        if pawscriptExecutionManager.canStopBrowserUse,
+           stopBrowserPhrases.contains(where: { normalized.contains($0) }) {
+            pawscriptExecutionManager.stopBrowserUse()
+            return true
+        }
+
+        guard pawscriptExecutionManager.needsPrerequisiteConfirmation else {
+            return false
+        }
+
+        guard continuePhrases.contains(where: { normalized.contains($0) }) else {
+            return false
+        }
+
+        pawscriptExecutionManager.confirmPrerequisites()
+        return true
+    }
 
     private static let companionVoiceResponseSystemPrompt = """
     you're clicky, a friendly always-on companion that lives in the user's menu bar. the user just spoke to you via push-to-talk and you can see their screen(s). your reply will be spoken aloud via text-to-speech, so write the way you'd actually talk. this is an ongoing conversation — you remember everything they've said before.
@@ -731,8 +986,7 @@ final class CompanionManager: ObservableObject {
     /// the buddy to fly to that element on screen.
     private func sendTranscriptToClaudeWithScreenshot(transcript: String) {
         currentResponseTask?.cancel()
-        elevenLabsTTSClient.stopPlayback()
-        localTTSClient.stopPlayback()
+        stopAllTTSPlayback()
 
         // Clean up ASR artifacts and filler words before sending to Claude
         let transcript = TranscriptFilter.apply(transcript)
@@ -874,11 +1128,7 @@ final class CompanionManager: ObservableObject {
                 // until the audio actually starts playing, then switch to responding.
                 if !spokenText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     do {
-                        if selectedTTSBackend == "local" {
-                            try await localTTSClient.speakText(spokenText)
-                        } else {
-                            try await elevenLabsTTSClient.speakText(spokenText)
-                        }
+                        try await speakTextWithSelectedTTS(spokenText)
                         // speakText returns after player.play() — audio is now playing
                         voiceState = .responding
                         startSubtitles(for: spokenText)
@@ -914,7 +1164,7 @@ final class CompanionManager: ObservableObject {
         transientHideTask?.cancel()
         transientHideTask = Task {
             // Wait for TTS audio to finish playing
-            while elevenLabsTTSClient.isPlaying || localTTSClient.isPlaying {
+            while isAnyTTSPlaying {
                 try? await Task.sleep(nanoseconds: 200_000_000)
                 guard !Task.isCancelled else { return }
             }
