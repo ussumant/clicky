@@ -418,12 +418,12 @@ final class PawscriptExecutionManager: ObservableObject {
         activePackage = urlResolver.normalizedPackage(activePackage)
         self.activePackage = activePackage
         guard !needsPrerequisiteConfirmation else {
-            pendingModeAfterPrerequisites = .watchMe
+            pendingModeAfterPrerequisites = .doTogether
             pauseForPrerequisites(activePackage)
             return
         }
         refreshGeneratedPrompt(for: .doTogether)
-        currentStepIndex = 0
+        currentStepIndex = guideStartIndex(for: activePackage)
         activeMode = .doTogether
         runState = .running
         stuckSince = nil
@@ -533,8 +533,18 @@ final class PawscriptExecutionManager: ObservableObject {
         guard let currentStep else { return }
         addEvent(title: currentStep.title, detail: currentStep.description)
         pointAtCurrentStepHandler?(currentStep)
-        openTargetIfNavigable(currentStep)
+        if !prerequisitesConfirmed {
+            openTargetIfNavigable(currentStep)
+        }
         announce("Step \(currentStep.number): \(Self.shortText(currentStep.description, limit: 180))")
+    }
+
+    private func guideStartIndex(for package: PawscriptSkillPackage) -> Int {
+        guard prerequisitesConfirmed else { return 0 }
+        let sortedSteps = package.steps.sorted { $0.number < $1.number }
+        return sortedSteps.firstIndex { step in
+            step.number >= 3 || (step.action != "navigate" && step.action != "conditional")
+        } ?? min(2, max(0, sortedSteps.count - 1))
     }
 
     private func addPrerequisiteEventIfNeeded(_ package: PawscriptSkillPackage) {
