@@ -266,18 +266,18 @@ final class PawscriptSkillStore {
         let skill = Skill(
             id: skillId,
             name: "paper-shaders-design-guide",
-            title: "Use Paper Shaders with Browser Use handoff",
+            title: "Create an Ask AI shader card in Paper",
             yamlContent: """
             name: paper-shaders-design-guide
             steps:
               - title: Open an editable Paper canvas
               - title: Handle login or canvas handoff
-              - title: Add or select Warp shader
-              - title: Choose and tune a preset
-              - title: Freeze motion or export React
-              - title: Add Fluted Glass image filter
-              - title: Chain Halftone if useful
-              - title: Vectorize and verify final asset
+              - title: Draw the rounded card and inner circle
+              - title: Add the Liquid Metal shader
+              - title: Add a sparkle icon and Ask AI text
+              - title: Apply Neuron Noise to the text
+              - title: Add and tune the Pulsing Border
+              - title: Verify the final social graphic
             """,
             track: "design",
             difficulty: "beginner",
@@ -319,79 +319,79 @@ final class PawscriptSkillStore {
                 id: UUID(uuidString: "66666666-6666-4666-8666-666666666603")!,
                 skillId: skillId,
                 number: 3,
-                title: "Add or select Warp shader",
-                action: "select",
-                target: "Warp shader",
-                value: "Warp",
-                description: "Find a Warp shader in the current canvas or shader library. If a Warp shader is already selected, keep it. Otherwise, add or open Warp from the visible shader list.",
-                verification: "A Warp or comparable generative shader is selected and its preset or parameter controls are visible.",
-                gotchaText: "If Warp is not visible, choose the first available abstract or generative shader and tell the user what changed.",
+                title: "Draw the rounded card and inner circle",
+                action: "configure",
+                target: "Rectangle, border radius, duplicate, circle",
+                value: "Dark rounded card with left circle",
+                description: "Create a dark rounded rectangle card, duplicate or add a smaller shape inside it, then make the inner shape a consistent-width circle on the left. This builds the base for the Ask AI social graphic shown in the video.",
+                verification: "A dark pill or rounded card is visible with a smaller circular element on its left side.",
+                gotchaText: "Paper's layers feel reversed compared with Figma: lower items in the layers panel can appear visually above. If the circle disappears, check layer order.",
                 estimatedTime: "2min"
             ),
             SkillStep(
                 id: UUID(uuidString: "66666666-6666-4666-8666-666666666604")!,
                 skillId: skillId,
                 number: 4,
-                title: "Choose and tune a preset",
+                title: "Add the Liquid Metal shader",
                 action: "configure",
-                target: "Presets and shader parameter controls",
-                value: "Pick one preset, then adjust 1-2 controls",
-                description: "Open the preset control, choose a visually distinct preset, then adjust one or two obvious parameters such as scale, intensity, shape, spacing, or distortion. Move fast, but do not drag unknown controls repeatedly.",
-                verification: "The selected shader visibly changes from the starting preset, and the canvas still looks usable.",
-                gotchaText: "If a slider label or control purpose is unclear, make one small adjustment and verify the visual change before continuing.",
+                target: "Shaders panel, Liquid Metal or Metal shader",
+                value: "Liquid Metal",
+                description: "Open Paper's shaders panel, add the Liquid Metal or metal-looking shader, remove or reduce its background opacity, make it circular, and position it over the left circle/card area.",
+                verification: "A metallic circular shader is visible on the card and can be scaled or repositioned.",
+                gotchaText: "If Liquid Metal is not visible by exact name, choose the most obvious metal shader and keep moving; the demo story is the tutorial becoming guidance.",
                 estimatedTime: "2min"
             ),
             SkillStep(
                 id: UUID(uuidString: "66666666-6666-4666-8666-666666666605")!,
                 skillId: skillId,
                 number: 5,
-                title: "Freeze motion or export React",
+                title: "Add a sparkle icon and Ask AI text",
                 action: "configure",
-                target: "Speed control or Copy as React",
-                value: "Speed 0 or Copy as React",
-                description: "If a Speed control is visible, set it to zero when the user wants a static texture. If an export menu or Copy as React button is visible, copy the shader code. If export is hidden, skip export and continue after noting it.",
-                verification: "Either motion is intentionally set, React code has been copied, or the step was skipped with a clear note.",
-                gotchaText: "Do not get stuck hunting for export. The core guide can continue without a React copy.",
+                target: "Sparkle SVG icon and text tool",
+                value: "Sparkle icon, Ask AI",
+                description: "Add a sparkle icon from an icon library such as Remix Icon, paste or import it as SVG, then add the text 'Ask AI' next to it. Keep both inside or near the dark rounded card.",
+                verification: "The card includes a white sparkle-style icon and readable Ask AI text.",
+                gotchaText: "If importing SVG is slow, skip the icon import and use any visible sparkle/star icon already available. Do not let icon sourcing derail the demo.",
                 estimatedTime: "1min"
             ),
             SkillStep(
                 id: UUID(uuidString: "66666666-6666-4666-8666-666666666606")!,
                 skillId: skillId,
                 number: 6,
-                title: "Add Fluted Glass image filter",
+                title: "Apply Neuron Noise to the text",
                 action: "configure",
-                target: "Fluted Glass image input",
-                value: "Fluted Glass",
-                description: "Add or select the Fluted Glass image filter. Use Edit to upload an image, the eyedropper to capture a visible image, or Paper image generation if available. Pause for user correction if the image source is ambiguous.",
-                verification: "An image appears inside the Fluted Glass shader and the filter visibly changes the image.",
-                gotchaText: "Image upload and eyedropper selection are likely handoff points. Ask the user to pick the image if the target is not obvious.",
+                target: "Neuron Noise shader, blending mode, color controls",
+                value: "Neuron Noise + Multiply",
+                description: "Add the Neuron Noise effect, place it over the Ask AI text, try Multiply blending, then adjust scale, brightness, and colors until the text gets a subtle animated texture without becoming unreadable.",
+                verification: "The Ask AI text has a visible shader/noise treatment and remains legible.",
+                gotchaText: "The video experiments here. Make one visible change, verify it looks good, then move on instead of over-tuning sliders.",
                 estimatedTime: "2min"
             ),
             SkillStep(
                 id: UUID(uuidString: "66666666-6666-4666-8666-666666666607")!,
                 skillId: skillId,
                 number: 7,
-                title: "Chain Halftone if useful",
+                title: "Add and tune the Pulsing Border",
                 action: "configure",
-                target: "Halftone shader or vintage preset",
-                value: "Halftone or Vintage",
-                description: "If the filtered image looks stable, add a Halftone shader or choose a visible halftone or vintage preset. Skip this step if the canvas is already visually busy.",
-                verification: "The added shader makes the graphic more distinctive without obscuring the image. If not, undo or ask the user whether to keep it.",
-                gotchaText: "The correct fast move is sometimes to skip the extra shader. Ask the user if the result is already good enough.",
+                target: "Pulsing Border shader, roundness, opacity, color controls",
+                value: "Pulsing Border",
+                description: "Add the Pulsing Border effect around or behind the card, set roundness high, remove its background opacity, resize it to fit the card, then tune the red/blue/green colors so the border supports the design.",
+                verification: "A glowing or animated border frames the card without covering the icon or Ask AI text.",
+                gotchaText: "If the default red lines look too harsh, recolor or reduce them. The visible payoff is the border framing the card.",
                 estimatedTime: "1min"
             ),
             SkillStep(
                 id: UUID(uuidString: "66666666-6666-4666-8666-666666666608")!,
                 skillId: skillId,
                 number: 8,
-                title: "Vectorize and verify final asset",
+                title: "Verify the final social graphic",
                 action: "verify",
-                target: "Vectorize and final asset",
-                value: "Vectorize if visible",
-                description: "If a flat generated image is selected and Vectorize is visible in the context menu, run Vectorize. Otherwise skip vectorization and verify the final asset format with the user.",
-                verification: "The user confirms the result and export path: live shader, static texture, React code, or SVG.",
-                gotchaText: "Right-click context menus are brittle for browser agents. If Vectorize is not visible immediately, ask the user to open it or skip.",
-                estimatedTime: "2min"
+                target: "Final Paper canvas",
+                value: "Ask AI shader card",
+                description: "Compare the result to the tutorial target: dark rounded card, metallic circle, sparkle icon, Ask AI text, subtle text shader, and pulsing border. Ask the user whether to keep it as a live Paper design or export later.",
+                verification: "The user can point to the finished Ask AI-style graphic on the Paper canvas.",
+                gotchaText: "Do not chase export in the live demo. The win is that the saved YouTube tutorial became an active guided session.",
+                estimatedTime: "1min"
             )
         ]
 
@@ -402,31 +402,31 @@ final class PawscriptSkillStore {
                 SkillGotcha(
                     id: UUID(uuidString: "88888888-8888-4888-8888-888888888803")!,
                     skillId: skillId,
-                    title: "Do not stop at presets",
-                    description: "Presets are useful starting points, but a design can feel generic if the preset is not tuned.",
+                    title: "Paper layer order feels reversed",
+                    description: "The tutorial notes that elements below in Paper's layers panel may appear above visually, which can surprise Figma users.",
                     source: "youtube-captions-v1",
-                    stepNumber: 2,
-                    fix: "Choose a preset, then adjust parameters until the shader supports the specific graphic.",
+                    stepNumber: 3,
+                    fix: "If the metal shader, circle, or card disappears, inspect layer order before changing the design.",
                     createdAt: createdAt
                 ),
                 SkillGotcha(
                     id: UUID(uuidString: "88888888-8888-4888-8888-888888888804")!,
                     skillId: skillId,
-                    title: "Layer effects carefully",
-                    description: "Chained shaders can become visually noisy when every layer is strong.",
+                    title: "Icon sourcing can derail the demo",
+                    description: "The video uses Remix Icon and SVG copy/download, but a live demo should not get stuck browsing icon libraries.",
                     source: "youtube-captions-v1",
-                    stepNumber: 6,
-                    fix: "Reduce the strength of one shader or return to the original image and apply only the strongest effect.",
+                    stepNumber: 5,
+                    fix: "Use any available sparkle/star icon if SVG import is slow, then continue to the shader effects.",
                     createdAt: createdAt
                 ),
                 SkillGotcha(
                     id: UUID(uuidString: "88888888-8888-4888-8888-888888888805")!,
                     skillId: skillId,
-                    title: "Use handoff when UI confidence drops",
-                    description: "The Paper editor, shader library, and export menu may expose different UI labels depending on account state or product changes.",
+                    title: "Shader tuning is intentionally fuzzy",
+                    description: "The creator experiments with colors, blend modes, scale, brightness, and border colors rather than following exact numeric values.",
                     source: "browser-use-hardening",
-                    stepNumber: 1,
-                    fix: "If the agent cannot identify the target control with high confidence, pause and ask the user to click the correct control, then continue from the resulting screen.",
+                    stepNumber: 6,
+                    fix: "Make one visible improvement, verify readability, and move on instead of over-tuning.",
                     createdAt: createdAt
                 )
             ],
@@ -434,7 +434,7 @@ final class PawscriptSkillStore {
                 SkillAcceptanceCriterion(
                     id: UUID(uuidString: "99999999-9999-4999-8999-999999999903")!,
                     skillId: skillId,
-                    criterion: "A Browser Use agent can complete the public steps, pause for login or low-confidence UI states, and hand control back to the user for correction without losing progress."
+                    criterion: "Guide mode can take the user from a saved Paper.design YouTube tutorial to a visible Ask AI-style shader card without relying on Browser Use."
                 )
             ],
             prerequisites: [
@@ -450,37 +450,37 @@ final class PawscriptSkillStore {
                 ),
                 PawscriptPrerequisite(
                     id: UUID(uuidString: "77777777-7777-4777-8777-777777777704")!,
-                    title: "Prepare an image source",
-                    detail: "Have an image ready to upload, or let the user approve a generated image before the agent pulls it into the image-filter shader.",
+                    title: "Have a sparkle icon fallback",
+                    detail: "The video pulls a sparkle icon from Remix Icon. For the demo, any visible sparkle/star SVG or icon is acceptable if Remix Icon slows things down.",
                     kind: "asset",
                     source: "youtube-captions-v1",
-                    stepNumber: 6,
+                    stepNumber: 5,
                     isBlocking: false,
-                    actionLabel: "Image ready"
+                    actionLabel: "Icon ready"
                 ),
                 PawscriptPrerequisite(
                     id: UUID(uuidString: "77777777-7777-4777-8777-777777777705")!,
-                    title: "Confirm correction handoff",
-                    detail: "Tell the user that the agent will move quickly through obvious UI states, but will pause when it cannot confidently identify a button, shader control, image source, or export menu.",
+                    title: "Use Guide me for the live demo",
+                    detail: "Browser Use can be flaky inside Paper's editor. For the deterministic demo, use Spanks as a screen-observing guide after the setup checkpoint.",
                     kind: "safety",
                     source: "browser-use-hardening",
                     stepNumber: 1,
                     isBlocking: false,
-                    actionLabel: "Fast handoff OK"
+                    actionLabel: "Guide mode OK"
                 )
             ],
             sourceKind: .youtube,
-            sourceURL: "https://www.youtube.com/watch?v=Q_bd7BFh0XY",
-            extractedSummary: "The Paper Shaders walkthrough becomes a browser-agent workflow: open Paper Shaders, enter an editable Paper canvas, pause for login or missing editor state, place a Warp shader, choose and tune a preset, export React code, add a Fluted Glass image filter, hand off if image capture is ambiguous, chain a Halftone shader, and optionally vectorize a flat image.",
-            toolsUsed: ["Paper", "Paper Shaders", "Shader presets", "Image generation", "Eyedropper image capture", "Copy as React", "Vectorize"],
+            sourceURL: "https://www.youtube.com/watch?v=Ny3rvJWT5PM",
+            extractedSummary: "The video shows how to recreate a viral Ask AI-style social graphic in Paper.design: open Paper, create a rounded dark card, place a circular Liquid Metal shader, add a sparkle icon and Ask AI text, apply Neuron Noise with blending to the text, add a Pulsing Border effect, tune colors, and verify the final animated shader card.",
+            toolsUsed: ["Paper.design", "Liquid Metal shader", "Remix Icon", "SVG import", "Text tool", "Neuron Noise", "Multiply blending", "Pulsing Border"],
             promptSnippets: [
-                "Move fast through visible Paper controls, but pause for human correction when confidence is below 0.75 or the screen differs from the expected state.",
-                "If Paper asks for login, signup, payment, or project selection, stop and ask the user to complete that step manually.",
-                "Prefer visible labels: Warp, Presets, Speed, Copy as React, Fluted Glass, Edit, eyedropper, Halftone, Vintage, Vectorize.",
-                "After every material canvas change, verify the visible result before continuing.",
-                "If image capture, shader chaining, or export is ambiguous, ask the user to click or select the target, then resume from the new screen."
+                "After setup, prefer Guide me: observe the current Paper canvas, point at likely controls, and let the human click.",
+                "If Paper asks for login, signup, payment, or project selection, ask the user to complete that step manually.",
+                "Prefer visible labels and concepts from the video: rectangle, border radius, circle, shaders, Liquid Metal, sparkle SVG, Ask AI, Neuron Noise, Multiply, Pulsing Border.",
+                "Make visible design progress quickly: one shader, one text treatment, one border effect.",
+                "Do not chase export during the live demo. End when the Ask AI shader card is visibly complete."
             ],
-            customizationQuestion: "What kind of graphic should Spanks help you make with Paper Shaders, and should the agent move fast or pause before changing the canvas?"
+            customizationQuestion: "What should the Ask AI-style Paper card say, and should Spanks prioritize speed or visual polish?"
         )
     }
 

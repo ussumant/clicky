@@ -40,11 +40,11 @@ final class PawscriptSourceExtractor {
             )
 
         case .youtube:
-            if normalizedURL.contains("Q_bd7BFh0XY") {
+            if normalizedURL.contains("Ny3rvJWT5PM") || normalizedURL.contains("Q_bd7BFh0XY") {
                 let package = try skillStore.loadBundledSkill(named: "paper-shaders-design-guide")
                 return PawscriptExtractionResult(
                     package: package,
-                    fallbackNotice: "Loaded the validated Paper Shaders guide for this demo video."
+                    fallbackNotice: "Loaded the validated Paper.design shader-card guide for this demo video."
                 )
             }
 
