@@ -424,6 +424,21 @@ struct PawscriptPanelView: View {
                     }
                 }
 
+                if let referenceText = referenceText {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Label("Reference values", systemImage: "ruler")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(DS.Colors.accentText)
+                        Text(referenceText)
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .foregroundColor(DS.Colors.textPrimary)
+                            .lineLimit(4)
+                            .textSelection(.enabled)
+                    }
+                    .padding(7)
+                    .background(inputBackground)
+                }
+
                 if pawscriptManager.canConfirmPrerequisites {
                     runButton(
                         title: "I'm done - continue",
@@ -465,6 +480,20 @@ struct PawscriptPanelView: View {
                 .font(.system(size: 9, weight: .medium))
                 .foregroundColor(DS.Colors.textTertiary)
         }
+    }
+
+    private var referenceText: String? {
+        guard let step = pawscriptManager.currentStep,
+              pawscriptManager.activeMode == .doTogether || pawscriptManager.canConfirmPrerequisites else {
+            return nil
+        }
+
+        let value = (step.value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else { return nil }
+
+        return value
+            .replacingOccurrences(of: ". ", with: "\n")
+            .replacingOccurrences(of: "; ", with: "\n")
     }
 
     private var inputBackground: some View {
