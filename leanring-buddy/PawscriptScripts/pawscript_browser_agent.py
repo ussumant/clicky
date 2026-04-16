@@ -344,14 +344,22 @@ async def main():
 
     try:
         emit("browser_launching", f"Opening Pawscript Chrome at {start_url}.")
-        _chrome_process, cdp_url, cdp_port = await launch_pawscript_chrome(
+        chrome_process, cdp_url, cdp_port = await launch_pawscript_chrome(
             start_url,
             browser_profile_dir,
             preferred_port,
         )
         emit("browser_ready", f"Pawscript Chrome ready on CDP port {cdp_port}.")
         browser_session = BrowserSession(cdp_url=cdp_url, keep_alive=True)
-        await ensure_start_url(browser_session, start_url)
+        if chrome_process is None:
+            emit("resumed", "Using the existing Pawscript Chrome page you prepared.")
+            task = build_resume_task(
+                payload,
+                "Human setup checkpoint",
+                "The user says the visible Pawscript Chrome page is ready. Continue from the current page without reopening the tutorial start URL.",
+            )
+        else:
+            await ensure_start_url(browser_session, start_url)
     except Exception as exc:
         emit("error", f"Pawscript Chrome failed to launch or attach: {exc}")
         return 2

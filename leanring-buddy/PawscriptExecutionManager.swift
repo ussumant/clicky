@@ -377,8 +377,8 @@ final class PawscriptExecutionManager: ObservableObject {
         browserUseHandoffActive = false
         browserUseHandoffMessage = nil
         runState = activePackage == nil ? .idle : .ready
-        addEvent(title: "Prerequisites confirmed", detail: "Spanks can now guide or automate the skill.")
-        announce("Perfect. I will continue now that the setup is ready.")
+        addEvent(title: "Prerequisites confirmed", detail: "Spanks will continue from the current Pawscript Chrome page.")
+        announce("Perfect. I will continue from the page you prepared, not reopen the starting link.")
         switch pendingMode {
         case .watchMe:
             runWatchMe()
