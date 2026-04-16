@@ -1,65 +1,279 @@
-# Hi, this is Clicky.
-It's an AI teacher that lives as a buddy next to your cursor. It can see your screen, talk to you, and even point at stuff. Kinda like having a real teacher next to you.
+# Clicky + Pawscript
 
-## Codex Hackathon: Pawscript
+**Built during OpenAI Codex Hackathon demo day.**
 
-This fork adds **Pawscript**, a tutorial-to-execution layer for Clicky. Paste a YouTube tutorial or a how-to doc, and Spanks turns it into a Workflow Recorder-compatible skill that can be replayed in two demo modes:
+Clicky is a macOS menu bar companion that can see your screen, listen when you press a hotkey, talk back, and point at the thing it is explaining. This fork adds **Pawscript**: a tutorial-to-execution layer that turns saved YouTube videos and how-to docs into active guided sessions.
 
-- **Guide me** — Spanks watches your screen, narrates the current step, points at likely targets, and moves the cursor.
-- **Watch Spanks do it** — Browser Use opens a visible browser and executes the same skill.
+The product idea is simple:
 
-The canonical bundled fallback is OpenAI's “Designing delightful frontends with GPT-5.4” guide, so the hackathon demo works even if the hero YouTube URL fails validation.
+> I have too many bookmarks, docs, and videos saved forever. Pawscript turns one of them into something I actually do.
 
-For the hackathon slice, **Browser Use is the primary automation engine** because Pawscript v1 focuses on browser tutorials: it can open a visible browser, click/type through the extracted skill, and stream progress back to Spanks. Full-desktop computer-use systems like [CUA](https://github.com/trycua/cua) are a strong roadmap fit for non-browser tutorials, but they add sandbox and host-control setup risk that is too high for the 2-minute demo. Keep the Pawscript executor boundary skill-based so Browser Use can later sit beside a `CUAExecutor` or another computer-use backend without changing the WR-compatible `SkillStep[]` contract.
+Instead of watching a tutorial in one tab and working in another, Spanks the pixel cat extracts the tutorial into a Workflow Recorder-compatible skill, walks beside you step-by-step, captures gotchas when you get stuck, and can hand browser-safe work to an agent path.
 
-Download it [here](https://www.clicky.so/) for free.
+![Clicky demo](clicky-demo.gif)
 
-Here's the [original tweet](https://x.com/FarzaTV/status/2041314633978659092) that kinda blew up for a demo for more context.
+## Demo-Day Story
 
-![Clicky — an ai buddy that lives on your mac](clicky-demo.gif)
+The demo story is **saved tutorial → cat-guided execution**.
 
-This is the open-source version of Clicky for those that want to hack on it, build their own features, or just see how it works under the hood.
+1. Paste a tutorial or doc URL into Pawscript.
+2. Spanks loads or extracts a skill: steps, prerequisites, gotchas, acceptance criteria, tools, and reference values.
+3. You click **Guide me**.
+4. Spanks opens or points at the right place, narrates the current step, and shows exactly what is “good enough” to move on.
+5. If the workflow needs login, a canvas, or a human choice, Spanks pauses instead of pretending.
+6. If you get stuck, click **Stuck** and Pawscript saves a gotcha with context.
+7. The same skill can also be sent to **Watch Spanks do it**, the Browser Use agent path, for browser automation.
 
-## Get started with Claude Code
+The hackathon framing:
 
-The fastest way to get this running is with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
+> Tutorials should not die as passive tabs. They should become reusable execution skills for humans and agents.
 
-Once you get Claude running, paste this:
+## Hero Demo
 
+The primary demo source is this Paper.design YouTube tutorial:
+
+```text
+https://www.youtube.com/watch?v=Ny3rvJWT5PM
 ```
-Hi Claude.
 
-Clone https://github.com/farzaa/clicky.git into my current directory.
+For stage reliability, the repo includes a bundled validated Paper skill:
 
-Then read the CLAUDE.md. I want to get Clicky running locally on my Mac.
-
-Help me set up everything — the Cloudflare Worker with my own API keys, the proxy URLs, and getting it building in Xcode. Walk me through it.
+```text
+leanring-buddy/PawscriptSkills/paper-shaders-design-guide.json
 ```
 
-That's it. It'll clone the repo, read the docs, and walk you through the whole setup. Once you're running you can just keep talking to it — build features, fix bugs, whatever. Go crazy.
+That skill guides the user through building an **Ask AI shader card** in Paper:
 
-## Manual setup
+1. Open an editable Paper canvas.
+2. Handle login or canvas setup.
+3. Draw the dark rounded card.
+4. Add the left circle.
+5. Add Liquid Metal to the circle.
+6. Add the Ask AI text.
+7. Add a sparkle icon.
+8. Add Neuron Noise to the text.
+9. Add the Pulsing Border.
+10. Verify the final graphic.
 
-If you want to do it yourself, here's the deal.
+Each step includes concrete substeps plus a `Good enough:` checkpoint, so the demo does not depend on fragile perfect automation inside a design editor.
 
-### Prerequisites
+Example:
 
-- macOS 14.2+ (for ScreenCaptureKit)
-- Xcode 15+
-- Node.js 18+ (for the Cloudflare Worker)
-- A [Cloudflare](https://cloudflare.com) account (free tier works)
-- API keys for: [Anthropic](https://console.anthropic.com), [AssemblyAI](https://www.assemblyai.com), [ElevenLabs](https://elevenlabs.io)
-- Optional: an [OpenAI](https://platform.openai.com) API key for OpenAI voice and transcription from the in-app settings panel.
+```text
+1. Select Rectangle
+2. Draw a wide horizontal card
+3. Set W 520 / H 180 if fields are visible
+4. Set radius 44 if visible
+5. Set fill #151515
+Good enough: a dark rounded card is on the canvas
+```
 
-### OpenAI voice setup
+There is also a bundled doc fallback based on OpenAI’s **Designing delightful frontends with GPT-5.4** guide:
 
-Open the Clicky menu bar panel, expand **OpenAI**, paste your OpenAI API key, and hit **Save key**. The key is stored in macOS Keychain, not `UserDefaults`.
+```text
+https://developers.openai.com/blog/designing-delightful-frontends-with-gpt-5-4
+```
 
-Then set **Voice** to **OpenAI** to power spoken responses with OpenAI text-to-speech. You can also set **Listen** to **OpenAI** if you want OpenAI transcription instead of AssemblyAI or local Apple Speech.
+## What Shipped
 
-### Pawscript demo setup
+### Pawscript Panel
 
-Pawscript expects demo tools to be preinstalled; it does not auto-install them from the app.
+Pawscript adds a compact workflow section to the Clicky menu bar panel:
+
+- YouTube / Doc source tabs.
+- URL input.
+- **Extract skill** button.
+- Customization prompt.
+- Prerequisite checklist.
+- **Guide me**, **Next**, **Stuck**, **Pause**, **Resume**, **Stop guide** controls.
+- **Watch Spanks do it**, **Continue**, and **Stop Spanks** controls for agent runs.
+- Show/hide tips toggle for the cat instruction bubble.
+- Current step preview.
+- `Substeps / reference` panel with deterministic values.
+- Human completion, agent completion, and gotcha counters.
+- Latest run-log affordance with an **Open** button.
+
+### Guide Me
+
+Guide mode is the reliable live demo path. Spanks:
+
+- starts after the setup checkpoint when needed
+- narrates the current step
+- shows substeps and “good enough” criteria
+- watches the screen and points at likely UI targets
+- moves the overlay cursor and can move the system cursor to the detected target
+- never clicks or types for the human in guide mode
+- lets the user manually advance with **Next**
+- lets the user intentionally save a gotcha with **Stuck**
+- supports pause/resume/stop
+- increments `humanCompletions` when the skill completes
+
+This mode is intentionally calmer than full automation. It solves the actual demo problem: the user can keep moving even when the target app has login, account state, custom canvas state, or UI drift.
+
+### Watch Spanks Do It
+
+Agent mode is the Browser Use path for browser-safe workflows. It:
+
+- launches a dedicated visible **Pawscript Chrome** profile
+- connects Browser Use over Chrome DevTools Protocol
+- uses the OpenAI key saved in Clicky settings
+- streams JSONL status events back to Swift
+- logs browser profile, control directory, process output, and run state
+- pauses for login, setup, private data, billing, uploads, low-confidence states, and repeated page errors
+- lets the user press **Continue** after fixing the visible browser state
+- increments `agentCompletions` on success
+- records Browser Use failures as gotchas
+
+For the final Paper.design demo, **Guide me is the deterministic path**. Browser Use remains wired as the agent proof path, but Paper’s editor can be brittle enough that the stage-safe story is human + Spanks.
+
+### Run Logs
+
+Every extraction, guide run, and agent run can write a persistent local run log:
+
+```text
+~/Library/Application Support/Pawscript/runs/
+```
+
+Each run directory contains `run.json` with timeline events, mode, source URL, skill title, final state, counters, artifacts, Browser Use exit code, and error summary. Stuck events can save screenshots/context artifacts.
+
+### Spanks Sprite States
+
+The old simple cursor buddy is now backed by project-local pixel-cat sprite sheets:
+
+```text
+leanring-buddy/SpanksSpriteAssets/
+```
+
+The sprite state maps to app state:
+
+- idle
+- listening
+- capturing screen
+- thinking
+- speaking
+- pointing
+- waiting for human
+- success
+- agent running
+- error
+- permission needed
+- disabled
+
+The SwiftUI fallback cat remains useful if image loading fails.
+
+### OpenAI Settings
+
+The Clicky panel now supports OpenAI configuration for local demo paths:
+
+- save/clear OpenAI API key
+- choose OpenAI text-to-speech model
+- choose OpenAI voice
+- customize OpenAI voice style instructions
+- use OpenAI transcription as a listen backend
+- use OpenAI for Pawscript extraction, screen matching, and Browser Use
+
+The OpenAI key is stored in macOS Keychain, not in `UserDefaults`.
+
+## Why This Matters
+
+Pawscript is a human-facing execution layer for saved learning material.
+
+Most saved tutorials fail because they are passive:
+
+- You have to translate the video into actions yourself.
+- The tutorial assumes hidden setup.
+- You get stuck on one UI mismatch and abandon it.
+- The useful “gotchas” are never captured.
+- Agents fail silently on vague steps that humans could have clarified.
+
+Pawscript makes the workflow operational:
+
+- The source becomes a structured skill.
+- The skill has prerequisites, steps, gotchas, criteria, and tool notes.
+- A human can follow it with live guidance.
+- An agent can attempt browser-safe execution from the same structure.
+- Corrections and stuck points feed back into the same skill package.
+
+The important architectural bet is that **humans and agents consume the same skill format**.
+
+## Workflow Recorder Compatibility
+
+Pawscript uses Workflow Recorder-compatible models in:
+
+```text
+leanring-buddy/Skill.swift
+```
+
+Core models:
+
+- `Skill`
+- `SkillStep`
+- `SkillGotcha`
+- `SkillAcceptanceCriterion`
+
+Pawscript wraps those with demo/runtime metadata:
+
+- `PawscriptSkillPackage`
+- `PawscriptPrerequisite`
+- `PawscriptScreenMatch`
+- `PawscriptBrowserUseEvent`
+- `PawscriptExecutionEvent`
+- `PawscriptRunRecord`
+
+This keeps the core contract close to Workflow Recorder while allowing Clicky-specific runtime behavior.
+
+## Demo Script
+
+Use this if you are rehearsing the hackathon submission.
+
+1. Open the Xcode project.
+2. Run the `leanring-buddy` scheme.
+3. Grant Microphone, Accessibility, and Screen Recording permissions.
+4. Open the Clicky menu bar panel.
+5. In Pawscript, use the YouTube tab and paste:
+
+   ```text
+   https://www.youtube.com/watch?v=Ny3rvJWT5PM
+   ```
+
+6. Click **Extract skill**.
+7. Show the Paper skill preview, prerequisites, substeps/reference panel, and counters.
+8. Click **Guide me**.
+9. If Paper login or canvas setup appears, complete it manually and click **I’m done - continue**.
+10. Let Spanks point and narrate the first actionable step.
+11. Complete one or two visible substeps.
+12. Click **Stuck** once to show gotcha capture.
+13. Click **Next** to advance and show that the tutorial is now a guided checklist.
+14. Optionally click **Watch Spanks do it** to show the Browser Use path and human handoff controls.
+15. Open the run log to show the execution trail.
+
+The best stage line:
+
+> “The video was passive. Now it is a session: steps, substeps, setup checkpoints, gotchas, and a human/agent execution path.”
+
+## Requirements
+
+### macOS App
+
+- macOS 14.2 or newer
+- Xcode 15 or newer
+- Google Chrome for the Browser Use path
+- Microphone permission
+- Accessibility permission
+- Screen Recording permission
+- A signing team configured in Xcode
+
+### OpenAI
+
+For Pawscript’s live extraction, screen matching, OpenAI TTS, OpenAI transcription, and Browser Use:
+
+- Add your OpenAI API key in the Clicky panel.
+- Set Voice to `OpenAI` if you want OpenAI text-to-speech.
+- Set Listen to `OpenAI` if you want OpenAI transcription.
+
+### Browser Use
+
+Pawscript does not auto-install demo tools. Install them before attempting **Watch Spanks do it**:
 
 ```bash
 brew install yt-dlp
@@ -69,26 +283,56 @@ uv pip install browser-use openai python-dotenv
 uvx browser-use install
 ```
 
-If you use a custom Python environment, set `PAWSCRIPT_PYTHON` to its Python binary before launching the app from Xcode.
+If you use a custom Python environment, set `PAWSCRIPT_PYTHON` in your Xcode scheme or launch environment:
 
-Demo flow:
+```bash
+PAWSCRIPT_PYTHON=/path/to/python open leanring-buddy.xcodeproj
+```
 
-1. Paste `https://www.youtube.com/watch?v=Q_bd7BFh0XY`.
-2. Click **Extract skill**.
-3. Click **Guide me** to let Spanks point and move the cursor while you do the steps.
-4. Click **Stuck** once to record a `human-observation` gotcha.
-5. Click **Watch Spanks do it** to run the same skill through Browser Use in a visible browser.
+### Cloud AI Path
 
-### 1. Set up the Cloudflare Worker
+The original Clicky cloud path uses a Cloudflare Worker proxy for Claude, AssemblyAI, and ElevenLabs. The app does not ship those secrets.
 
-The Worker is a tiny proxy that holds your API keys. The app talks to the Worker, the Worker talks to the APIs. This way your keys never ship in the app binary.
+Required Worker secrets:
+
+- `ANTHROPIC_API_KEY`
+- `ASSEMBLYAI_API_KEY`
+- `ELEVENLABS_API_KEY`
+
+Required Worker var:
+
+- `ELEVENLABS_VOICE_ID`
+
+## Build And Run
+
+Open the project in Xcode:
+
+```bash
+open leanring-buddy.xcodeproj
+```
+
+In Xcode:
+
+1. Select the `leanring-buddy` scheme.
+2. Set your signing team.
+3. Press Cmd+R.
+
+Important: avoid terminal `xcodebuild` for normal local testing. It can invalidate or confuse macOS TCC permissions for Screen Recording, Accessibility, and Microphone access. macOS permissions are, regrettably, a tiny dungeon crawler.
+
+Known non-blocking warning:
+
+- `SpanksSpriteView.swift` currently emits a macOS 14 `onChange(of:perform:)` deprecation warning.
+
+## Cloudflare Worker Setup
+
+Install Worker dependencies:
 
 ```bash
 cd worker
 npm install
 ```
 
-Now add your secrets. Wrangler will prompt you to paste each one:
+Add secrets:
 
 ```bash
 npx wrangler secret put ANTHROPIC_API_KEY
@@ -96,97 +340,185 @@ npx wrangler secret put ASSEMBLYAI_API_KEY
 npx wrangler secret put ELEVENLABS_API_KEY
 ```
 
-For the ElevenLabs voice ID, open `wrangler.toml` and set it there (it's not sensitive):
+Set the ElevenLabs voice ID in `worker/wrangler.toml`:
 
 ```toml
 [vars]
 ELEVENLABS_VOICE_ID = "your-voice-id-here"
 ```
 
-Deploy it:
+Deploy:
 
 ```bash
 npx wrangler deploy
 ```
 
-It'll give you a URL like `https://your-worker-name.your-subdomain.workers.dev`. Copy that.
-
-### 2. Run the Worker locally (for development)
-
-If you want to test changes to the Worker without deploying:
+For local Worker development:
 
 ```bash
 cd worker
 npx wrangler dev
 ```
 
-This starts a local server (usually `http://localhost:8787`) that behaves exactly like the deployed Worker. You'll need to create a `.dev.vars` file in the `worker/` directory with your keys:
+Create `worker/.dev.vars`:
 
-```
+```text
 ANTHROPIC_API_KEY=sk-ant-...
 ASSEMBLYAI_API_KEY=...
 ELEVENLABS_API_KEY=...
 ELEVENLABS_VOICE_ID=...
 ```
 
-Then update the proxy URLs in the Swift code to point to `http://localhost:8787` instead of the deployed Worker URL while developing. Grep for `clicky-proxy` to find them all.
-
-### 3. Update the proxy URLs in the app
-
-The app has the Worker URL hardcoded in a few places. Search for `your-worker-name.your-subdomain.workers.dev` and replace it with your Worker URL:
-
-```bash
-grep -r "clicky-proxy" leanring-buddy/
-```
-
-You'll find it in:
-- `CompanionManager.swift` — Claude chat + ElevenLabs TTS
-- `AssemblyAIStreamingTranscriptionProvider.swift` — AssemblyAI token endpoint
-
-### 4. Open in Xcode and run
-
-```bash
-open leanring-buddy.xcodeproj
-```
-
-In Xcode:
-1. Select the `leanring-buddy` scheme (yes, the typo is intentional, long story)
-2. Set your signing team under Signing & Capabilities
-3. Hit **Cmd + R** to build and run
-
-The app will appear in your menu bar (not the dock). Click the icon to open the panel, grant the permissions it asks for, and you're good.
-
-### Permissions the app needs
-
-- **Microphone** — for push-to-talk voice capture
-- **Accessibility** — for the global keyboard shortcut (Control + Option)
-- **Screen Recording** — for taking screenshots when you use the hotkey
-- **Screen Content** — for ScreenCaptureKit access
+Then point the Swift proxy URLs at the local Worker while developing.
 
 ## Architecture
 
-If you want the full technical breakdown, read `CLAUDE.md`. But here's the short version:
+Clicky is a SwiftUI macOS app with AppKit bridges where macOS requires them.
 
-**Menu bar app** (no dock icon) with two `NSPanel` windows — one for the control panel dropdown, one for the full-screen transparent cursor overlay. Push-to-talk streams audio over a websocket to AssemblyAI, sends the transcript + screenshot to Claude via streaming SSE, and plays the response through ElevenLabs TTS. Claude can embed `[POINT:x,y:label:screenN]` tags in its responses to make the cursor fly to specific UI elements across multiple monitors. All three APIs are proxied through a Cloudflare Worker.
+### App Shell
 
-## Project structure
+- `leanring_buddyApp.swift` starts the menu bar app.
+- `MenuBarPanelManager.swift` owns the `NSStatusItem` and custom non-activating `NSPanel`.
+- `CompanionPanelView.swift` renders the main control panel.
+- `PawscriptPanelView.swift` renders the tutorial/session UI.
+- `DesignSystem.swift` holds shared colors, radii, and visual tokens.
 
+### Companion Runtime
+
+- `CompanionManager.swift` is the central state machine.
+- `BuddyDictationManager.swift` handles push-to-talk recording.
+- `GlobalPushToTalkShortcutMonitor.swift` listens for the global modifier shortcut.
+- `CompanionScreenCaptureUtility.swift` captures all screens.
+- `ClaudeAPI.swift` streams Claude responses through the Worker.
+- `ClaudeCLIAdapter.swift` runs local Claude Code CLI when selected.
+- `CodexCLIAdapter.swift` supports local Codex CLI style execution.
+- `ElevenLabsTTSClient.swift`, `OpenAITTSClient.swift`, and `LocalTTSClient.swift` handle voice output.
+- `AssemblyAIStreamingTranscriptionProvider.swift`, `OpenAIAudioTranscriptionProvider.swift`, and `AppleSpeechTranscriptionProvider.swift` handle listen modes.
+- `OverlayWindow.swift` renders the cursor, text bubble, waveform, subtitles, and Spanks overlay.
+- `SpanksSpriteView.swift` renders pixel-cat animation states.
+
+### Pawscript Runtime
+
+- `PawscriptExecutionManager.swift` coordinates extraction, guide mode, Browser Use mode, handoff, gotcha capture, completion counters, and run state.
+- `PawscriptSourceExtractor.swift` routes YouTube/doc sources to live extraction or bundled fallbacks.
+- `PawscriptYouTubeCaptionExtractor.swift` extracts YouTube captions through `yt-dlp`.
+- `PawscriptLLMSkillExtractor.swift` turns source text into a skill package with OpenAI.
+- `PawscriptPromptBuilder.swift` builds Codex/agent-ready prompts from skill packages.
+- `PawscriptURLResolver.swift` normalizes stale tutorial URLs and preflights navigable steps.
+- `PawscriptScreenMatcher.swift` uses screenshots and OpenAI vision to find current-step targets.
+- `PawscriptContextCapture.swift` saves stuck-state screenshots and context.
+- `PawscriptRunLogger.swift` writes durable local run logs.
+- `PawscriptBrowserUseExecutor.swift` launches the Python runner and streams Browser Use events back to Swift.
+- `PawscriptScripts/pawscript_browser_agent.py` runs Browser Use against the visible Pawscript Chrome session.
+- `PawscriptSkills/*.json` contains bundled demo/fallback skills.
+
+### Worker Proxy
+
+The Worker lives in `worker/src/index.ts` and exposes:
+
+| Route | Upstream | Purpose |
+| --- | --- | --- |
+| `POST /chat` | Anthropic Messages API | Claude vision and streaming chat |
+| `POST /tts` | ElevenLabs TTS | Voice audio |
+| `POST /transcribe-token` | AssemblyAI streaming token API | Short-lived websocket token |
+
+## Project Structure
+
+```text
+leanring-buddy/
+  leanring_buddyApp.swift
+  CompanionManager.swift
+  CompanionPanelView.swift
+  OverlayWindow.swift
+  SpanksSpriteView.swift
+  Skill.swift
+  Pawscript*.swift
+  PawscriptScripts/
+    pawscript_browser_agent.py
+  PawscriptSkills/
+    paper-shaders-design-guide.json
+    openai-delightful-frontends.json
+    youtube-codex-tutorial.json
+  SpanksSpriteAssets/
+worker/
+  src/index.ts
+  wrangler.toml
+wiki/
+  INDEX.md
+  topics/
+  concepts/
+AGENTS.md
+CLAUDE.md
+README.md
 ```
-leanring-buddy/          # Swift source (yes, the typo stays)
-  CompanionManager.swift    # Central state machine
-  CompanionPanelView.swift  # Menu bar panel UI
-  ClaudeAPI.swift           # Claude streaming client
-  ElevenLabsTTSClient.swift # Text-to-speech playback
-  OverlayWindow.swift       # Blue cursor overlay
-  AssemblyAI*.swift         # Real-time transcription
-  BuddyDictation*.swift     # Push-to-talk pipeline
-worker/                  # Cloudflare Worker proxy
-  src/index.ts              # Three routes: /chat, /tts, /transcribe-token
-CLAUDE.md                # Full architecture doc (agents read this)
+
+The project name keeps the legacy `leanring-buddy` typo. Do not rename it unless you also want to spend an afternoon negotiating with Xcode’s ghosts.
+
+## Local Data
+
+Pawscript stores generated and updated skill packages under:
+
+```text
+~/Library/Application Support/Pawscript/
 ```
 
-## Contributing
+Run logs are written under:
 
-PRs welcome. If you're using Claude Code, it already knows the codebase — just tell it what you want to build and point it at `CLAUDE.md`.
+```text
+~/Library/Application Support/Pawscript/runs/
+```
 
-Got feedback? DM me on X [@farzatv](https://x.com/farzatv).
+Browser Use uses a dedicated Chrome profile under:
+
+```text
+~/Library/Application Support/Pawscript/browser-profile/
+```
+
+This keeps demo state separate from your normal Chrome profile.
+
+## Safety Boundaries
+
+Pawscript v1 is deliberately browser-first and human-handoff-first.
+
+- It does not automate login or credentials.
+- It does not purchase, submit private data, or change billing/account settings.
+- It pauses when the workflow needs a human.
+- It uses visible browser automation so the presenter can see and correct it.
+- Guide mode points and explains; it does not click/type for the user.
+- Agent mode is constrained to Browser Use for browser workflows.
+- The skill contract stays backend-independent so another executor can be added later.
+
+Full desktop computer-use systems such as CUA are a natural roadmap item, but Browser Use was the right demo-day backend because the shipped tutorials are browser workflows and the failure mode is visible on stage.
+
+## Roadmap
+
+- Add a `CUAExecutor` or equivalent desktop automation backend beside Browser Use.
+- Save richer before/after screenshots for each step.
+- Add shareable skill export/import.
+- Add signed demo assets for image-upload tutorials.
+- Add a gallery of verified tutorial-to-skill packages.
+- Improve extraction quality scoring before a source becomes runnable.
+- Add a safer dry-run mode that explains what the agent would do before it acts.
+- Bridge Pawscript skill packages back into Workflow Recorder storage directly.
+
+## Credits
+
+This repo is a hackable Clicky fork with a Pawscript demo-day layer. The original Clicky concept is an AI buddy that lives on your Mac and helps by seeing, speaking, and pointing. Pawscript extends that idea from “answer my question” to “turn this saved tutorial into an active session.”
+
+Original Clicky context:
+
+- Website: [clicky.so](https://www.clicky.so/)
+- Original tweet: [Farza on X](https://x.com/FarzaTV/status/2041314633978659092)
+
+Demo-day components and inspiration:
+
+- Workflow Recorder-compatible skill data model
+- Browser Use for browser automation
+- `yt-dlp` for YouTube captions
+- OpenAI for extraction, vision matching, voice, transcription, and agent LLM use
+- Paper.design as the hero browser/design workflow
+- Spanks sprite sheets generated for the live companion states
+
+## License
+
+MIT, matching the original Clicky repo.
