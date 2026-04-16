@@ -302,10 +302,10 @@ struct BlueCursorView: View {
             // During cursor following: fast spring animation for snappy tracking.
             // During navigation: NO implicit animation — the frame-by-frame bezier
             // timer controls position directly at 60fps for a smooth arc flight.
-            SpanksSpriteView(mood: currentSpanksMood, size: 34)
+            SpanksSpriteView(animationState: currentSpanksAnimationState, size: 64)
                 .shadow(color: DS.Colors.overlayCursorBlue, radius: 8 + (buddyFlightScale - 1.0) * 20, x: 0, y: 0)
                 .scaleEffect(buddyFlightScale)
-                .opacity(buddyIsVisibleOnThisScreen && (companionManager.voiceState == .idle || companionManager.voiceState == .responding) ? cursorOpacity : 0)
+                .opacity(buddyIsVisibleOnThisScreen ? cursorOpacity : 0)
                 .position(cursorPosition)
                 .animation(
                     buddyNavigationMode == .followingCursor
@@ -319,16 +319,16 @@ struct BlueCursorView: View {
                     value: triangleRotationDegrees
                 )
 
-            // Blue waveform — replaces the triangle while listening
+            // Blue waveform — kept as a fallback accent while listening.
             BlueCursorWaveformView(audioPowerLevel: companionManager.currentAudioPowerLevel)
-                .opacity(buddyIsVisibleOnThisScreen && companionManager.voiceState == .listening ? cursorOpacity : 0)
+                .opacity(0)
                 .position(cursorPosition)
                 .animation(.spring(response: 0.2, dampingFraction: 0.6, blendDuration: 0), value: cursorPosition)
                 .animation(.easeIn(duration: 0.15), value: companionManager.voiceState)
 
-            // Blue spinner — shown while the AI is processing (transcription + Claude + waiting for TTS)
+            // Blue spinner — kept as a fallback accent while processing.
             BlueCursorSpinnerView()
-                .opacity(buddyIsVisibleOnThisScreen && companionManager.voiceState == .processing ? cursorOpacity : 0)
+                .opacity(0)
                 .position(cursorPosition)
                 .animation(.spring(response: 0.2, dampingFraction: 0.6, blendDuration: 0), value: cursorPosition)
                 .animation(.easeIn(duration: 0.15), value: companionManager.voiceState)
@@ -430,6 +430,80 @@ struct BlueCursorView: View {
             return .slap
         case .followingCursor:
             return companionManager.voiceState == .responding ? .purr : .idle
+        }
+    }
+
+    private var currentSpanksAnimationState: SpanksAnimationState {
+        switch buddyNavigationMode {
+        case .pointingAtTarget:
+            return .pointing
+        case .navigatingToTarget:
+            return .agentRunning
+        case .followingCursor:
+            break
+        }
+
+        if !companionManager.allPermissionsGranted {
+            return .permissionNeeded
+        }
+
+        let pawscriptManager = companionManager.pawscriptExecutionManager
+        if pawscriptManager.browserUseHandoffActive {
+            return .waitingForHuman
+        }
+
+        if pawscriptManager.activeMode == .watchMe {
+            switch pawscriptManager.runState {
+            case .running:
+                return .agentRunning
+            case .waitingForHuman:
+                return .waitingForHuman
+            case .completed:
+                return .success
+            case .failed:
+                return .error
+            default:
+                break
+            }
+        }
+
+        if pawscriptManager.activeMode == .doTogether {
+            switch pawscriptManager.runState {
+            case .running:
+                return .capturingScreen
+            case .paused, .waitingForHuman:
+                return .waitingForHuman
+            case .completed:
+                return .success
+            case .failed:
+                return .error
+            default:
+                break
+            }
+        }
+
+        switch pawscriptManager.runState {
+        case .extracting:
+            return .thinking
+        case .waitingForHuman:
+            return .waitingForHuman
+        case .completed:
+            return .success
+        case .failed:
+            return .error
+        default:
+            break
+        }
+
+        switch companionManager.voiceState {
+        case .idle:
+            return .idle
+        case .listening:
+            return .listening
+        case .processing:
+            return .thinking
+        case .responding:
+            return .speaking
         }
     }
 
