@@ -210,6 +210,11 @@ final class PawscriptExecutionManager: ObservableObject {
 
     func runWatchMe() {
         guard var activePackage else { return }
+        guard activeMode != .watchMe || (runState != .running && !browserUseHandoffActive) else {
+            addEvent(title: "Spanks already running", detail: "Use Continue or Stop Spanks in the current Pawscript Chrome run.")
+            announce("I am already running this one in Pawscript Chrome. Use Continue or Stop Spanks before starting again.")
+            return
+        }
         activePackage = urlResolver.normalizedPackage(activePackage)
         self.activePackage = activePackage
         if needsPrerequisiteConfirmation {

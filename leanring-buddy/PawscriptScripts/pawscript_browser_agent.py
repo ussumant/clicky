@@ -114,39 +114,38 @@ async def launch_pawscript_chrome(start_url, profile_dir, preferred_port):
     profile_path = Path(profile_dir).expanduser()
     profile_path.mkdir(parents=True, exist_ok=True)
     launch_url = start_url or "about:blank"
-    last_error = None
+    port = preferred_port
 
-    for port in range(preferred_port, preferred_port + 11):
-        current_cdp_url = await existing_cdp_url(port)
-        if current_cdp_url:
-            return None, current_cdp_url, port
+    current_cdp_url = await existing_cdp_url(port)
+    if current_cdp_url:
+        return None, current_cdp_url, port
 
-        args = [
-            chrome_path,
-            f"--remote-debugging-port={port}",
-            f"--user-data-dir={profile_path}",
-            "--no-first-run",
-            "--no-default-browser-check",
-            "--new-window",
-            launch_url,
-        ]
-        process = subprocess.Popen(
-            args,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
-        )
+    args = [
+        chrome_path,
+        f"--remote-debugging-port={port}",
+        f"--user-data-dir={profile_path}",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--new-window",
+        launch_url,
+    ]
+    process = subprocess.Popen(
+        args,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
 
-        try:
-            cdp_url = await wait_for_cdp(port, timeout_seconds=8)
-            return process, cdp_url, port
-        except Exception as exc:
-            last_error = exc
-            if process.poll() is None:
-                process.terminate()
-            await asyncio.sleep(0.2)
-
-    raise RuntimeError(f"Could not launch Pawscript Chrome with CDP: {last_error}")
+    try:
+        cdp_url = await wait_for_cdp(port, timeout_seconds=10)
+        return process, cdp_url, port
+    except Exception as exc:
+        if process.poll() is None:
+            process.terminate()
+        raise RuntimeError(
+            "Could not launch Pawscript Chrome with CDP on "
+            f"port {port}. Stop any existing Pawscript Chrome window and try again: {exc}"
+        ) from exc
 
 
 async def wait_for_human_signal(control_dir):
