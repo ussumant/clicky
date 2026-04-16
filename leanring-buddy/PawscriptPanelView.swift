@@ -424,6 +424,15 @@ struct PawscriptPanelView: View {
                     }
                 }
 
+                if pawscriptManager.canConfirmPrerequisites {
+                    runButton(
+                        title: "I'm done - continue",
+                        systemImage: "checkmark.circle.fill",
+                        isEnabled: true,
+                        action: pawscriptManager.confirmPrerequisites
+                    )
+                }
+
                 HStack(spacing: 10) {
                     metric(label: "human", value: "\(package.skill.humanCompletions)")
                     metric(label: "agent", value: "\(package.skill.agentCompletions)")

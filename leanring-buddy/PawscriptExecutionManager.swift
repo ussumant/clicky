@@ -99,6 +99,14 @@ final class PawscriptExecutionManager: ObservableObject {
         activeMode == .watchMe && browserUseHandoffActive
     }
 
+    var canConfirmPrerequisites: Bool {
+        guard needsPrerequisiteConfirmation,
+              case .waitingForHuman = runState else {
+            return false
+        }
+        return true
+    }
+
     var canStopBrowserUse: Bool {
         activeMode == .watchMe && (runState == .running || browserUseHandoffActive)
     }
