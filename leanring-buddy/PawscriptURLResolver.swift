@@ -38,7 +38,26 @@ final class PawscriptURLResolver {
     }
 
     func normalizedURL(from rawURLString: String, context: String) -> URL? {
-        URL(string: normalizeURLString(rawURLString, context: context))
+        for candidate in urlCandidates(from: rawURLString) {
+            let normalized = normalizeURLString(candidate, context: context)
+            if let url = URL(string: normalized),
+               ["http", "https"].contains(url.scheme?.lowercased() ?? "") {
+                return url
+            }
+        }
+
+        return nil
+    }
+
+    func normalizedNavigateURL(for step: SkillStep) -> URL? {
+        let candidates = [step.target, step.value].compactMap { $0 }
+        for candidate in candidates {
+            if let url = normalizedURL(from: candidate, context: stepContext(step)) {
+                return url
+            }
+        }
+
+        return nil
     }
 
     func normalizeURLString(_ rawURLString: String, context: String) -> String {
@@ -64,9 +83,7 @@ final class PawscriptURLResolver {
         let steps = package.steps.sorted { $0.number < $1.number }
 
         for step in steps where step.action == "navigate" {
-            let rawURL = step.value ?? step.target ?? ""
-            guard let url = normalizedURL(from: rawURL, context: stepContext(step)),
-                  ["http", "https"].contains(url.scheme?.lowercased() ?? "") else {
+            guard let url = normalizedNavigateURL(for: step) else {
                 continue
             }
 
@@ -108,6 +125,25 @@ final class PawscriptURLResolver {
             throw URLError(.badServerResponse)
         }
         return httpResponse.statusCode
+    }
+
+    private func urlCandidates(from rawURLString: String) -> [String] {
+        let trimmed = rawURLString.trimmingCharacters(in: .whitespacesAndNewlines)
+        var candidates: [String] = trimmed.isEmpty ? [] : [trimmed]
+
+        let pattern = #"https?://[^\s)"'<>,]+"#
+        if let regex = try? NSRegularExpression(pattern: pattern) {
+            let range = NSRange(trimmed.startIndex..<trimmed.endIndex, in: trimmed)
+            let matches = regex.matches(in: trimmed, range: range)
+            for match in matches {
+                guard let matchRange = Range(match.range, in: trimmed) else { continue }
+                let urlString = String(trimmed[matchRange])
+                    .trimmingCharacters(in: CharacterSet(charactersIn: ".,;:"))
+                candidates.append(urlString)
+            }
+        }
+
+        return Array(NSOrderedSet(array: candidates)) as? [String] ?? candidates
     }
 
     private func stepContext(_ step: SkillStep) -> String {

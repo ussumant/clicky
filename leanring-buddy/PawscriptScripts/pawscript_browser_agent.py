@@ -8,6 +8,7 @@ JSONL status events for the Swift app.
 import asyncio
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -257,7 +258,27 @@ def first_navigate_url(payload):
     steps = sorted(payload["skill"].get("steps") or [], key=lambda step: step.get("number", 0))
     for step in steps:
         if step.get("action") == "navigate":
-            return step.get("value") or step.get("target")
+            for candidate in (step.get("target"), step.get("value")):
+                url = first_url_candidate(candidate)
+                if url:
+                    return url
+    return None
+
+
+def first_url_candidate(value):
+    if not value:
+        return None
+
+    text = str(value).strip()
+    if text.startswith("http://") or text.startswith("https://"):
+        first_line = text.splitlines()[0].strip()
+        if first_line.startswith("http://") or first_line.startswith("https://"):
+            return first_line.rstrip(".,;:")
+
+    match = re.search(r"https?://[^\s)\"'<>,]+", text)
+    if match:
+        return match.group(0).rstrip(".,;:")
+
     return None
 
 

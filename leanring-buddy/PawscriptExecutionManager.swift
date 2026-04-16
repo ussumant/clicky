@@ -610,9 +610,7 @@ final class PawscriptExecutionManager: ObservableObject {
 
     private func openTargetIfNavigable(_ step: SkillStep) {
         guard step.action == "navigate" else { return }
-        let rawURL = step.value ?? step.target ?? ""
-        guard let url = urlResolver.normalizedURL(from: rawURL, context: stepContext(step)),
-              ["http", "https"].contains(url.scheme?.lowercased() ?? "") else {
+        guard let url = urlResolver.normalizedNavigateURL(for: step) else {
             return
         }
         NSWorkspace.shared.open(url)
@@ -711,8 +709,7 @@ final class PawscriptExecutionManager: ObservableObject {
             .sorted { $0.number < $1.number }
             .compactMap { step -> URL? in
                 guard step.action == "navigate" else { return nil }
-                let rawURL = step.value ?? step.target ?? ""
-                return urlResolver.normalizedURL(from: rawURL, context: stepContext(step))
+                return urlResolver.normalizedNavigateURL(for: step)
             }
             .first { ["http", "https"].contains($0.scheme?.lowercased() ?? "") }
 
