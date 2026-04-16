@@ -55,7 +55,7 @@ The main risk is [too busy / too subtle / text would be unreadable / source imag
 
 Concrete action:
 
-1. Open https://paper.design or https://shaders.paper.design.
+1. Open https://paper.design/.
 2. Look for a way to open a canvas, demo, editor, playground, or shader library.
 3. If asked to sign in, pause and ask the blind user whether to continue.
 

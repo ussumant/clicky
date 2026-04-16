@@ -295,9 +295,9 @@ final class PawscriptSkillStore {
                 number: 1,
                 title: "Open an editable Paper canvas",
                 action: "navigate",
-                target: "https://shaders.paper.design",
-                value: "https://shaders.paper.design",
-                description: "Navigate to Paper Shaders, then look for an action that opens the shader in Paper or an editable Paper canvas. If the screen is a marketing page only, use the most direct visible open, try, remix, or copy-to-Paper action.",
+                target: "https://paper.design/",
+                value: "https://paper.design/",
+                description: "Navigate to Paper, then open a signed-in editable Paper canvas before adding shader effects. If the screen is marketing, signup, login, or an empty workspace, hand off to the user to open the correct canvas.",
                 verification: "Continue only when an editable canvas or shader editor is visible. If not, hand off to the user and resume after they open the canvas.",
                 gotchaText: "If the browser lands on login, signup, pricing, or a static gallery, pause and ask the user to open an editable Paper canvas.",
                 estimatedTime: "1min"

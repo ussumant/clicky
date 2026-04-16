@@ -1,7 +1,7 @@
 # How to use Paper Shaders to elevate your designs
 
 Source video: https://www.youtube.com/watch?v=Q_bd7BFh0XY  
-Tool: Paper, plus Paper Shaders at https://shaders.paper.design
+Tool: Paper at https://paper.design, with shader effects inside an editable Paper canvas
 
 ## Goal
 
@@ -20,7 +20,7 @@ By the end, you should be able to:
 ## What you need
 
 - Paper: https://paper.design
-- Paper Shaders: https://shaders.paper.design
+- Paper Shaders: available from inside Paper's editor/shader controls
 - A Paper canvas or design file.
 - Optional: an image to filter. You can also generate one inside Paper.
 
@@ -174,7 +174,7 @@ Pause after each major step and ask me to confirm what I see before continuing. 
 
 For a Browser Use agent, make the guide more strict than the human tutorial:
 
-- Start at `https://shaders.paper.design`, but continue only once an editable Paper canvas or shader editor is visible.
+- Start at `https://paper.design/`, but continue only once an editable Paper canvas or shader editor is visible.
 - If Paper shows login, signup, pricing, account setup, or project selection, pause and ask the user to complete that step.
 - Use visible labels whenever possible: `Warp`, `Presets`, `Speed`, `Copy as React`, `Fluted Glass`, `Edit`, `Halftone`, `Vintage`, and `Vectorize`.
 - Move quickly through obvious controls, but hand off when confidence is low.
@@ -184,7 +184,7 @@ For a Browser Use agent, make the guide more strict than the human tutorial:
 Use this Browser Use prompt:
 
 ```text
-Open https://shaders.paper.design and help me recreate the Paper Shaders workflow from the video.
+Open https://paper.design/ and help me recreate the Paper Shaders workflow from the video.
 
 Move fast through obvious UI states. If you see a clear editable Paper canvas or shader editor, continue. If you see login, signup, pricing, account setup, project selection, or a static gallery with no editable canvas, stop and ask me to open the right canvas manually.
 

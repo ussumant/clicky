@@ -49,14 +49,11 @@ final class PawscriptURLResolver {
         }
 
         if host == "paper.design", url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/")) == "shaders" {
-            if let effectPath = paperShaderEffectPath(from: context) {
-                return "https://shaders.paper.design/\(effectPath)"
-            }
-            return "https://shaders.paper.design/"
+            return "https://paper.design/"
         }
 
         if host == "shaders.paper.design", url.path.isEmpty {
-            return "https://shaders.paper.design/"
+            return "https://paper.design/"
         }
 
         return rawURLString
@@ -111,17 +108,6 @@ final class PawscriptURLResolver {
             throw URLError(.badServerResponse)
         }
         return httpResponse.statusCode
-    }
-
-    private func paperShaderEffectPath(from context: String) -> String? {
-        let lowered = context.lowercased()
-        let knownEffects: [(needle: String, path: String)] = [
-            ("fluted glass", "fluted-glass"),
-            ("halftone", "halftone"),
-            ("warp", "warp"),
-            ("vintage", "vintage")
-        ]
-        return knownEffects.first { lowered.contains($0.needle) }?.path
     }
 
     private func stepContext(_ step: SkillStep) -> String {
