@@ -11,7 +11,7 @@ import Foundation
 @MainActor
 final class PawscriptExecutionManager: ObservableObject {
     @Published var selectedSourceKind: PawscriptSourceKind = .youtube
-    @Published var sourceURL: String = "https://www.youtube.com/watch?v=Q_bd7BFh0XY"
+    @Published var sourceURL: String = "https://www.youtube.com/watch?v=Ny3rvJWT5PM"
     @Published var customizationGoal: String = "Turn this saved tutorial into an active browser workflow."
     @Published private(set) var activePackage: PawscriptSkillPackage?
     @Published private(set) var generatedPrompt: String = ""

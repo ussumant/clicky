@@ -73,7 +73,7 @@ struct PawscriptPanelView: View {
             if sourceKind == .doc {
                 pawscriptManager.sourceURL = "https://developers.openai.com/blog/designing-delightful-frontends-with-gpt-5-4"
             } else {
-                pawscriptManager.sourceURL = "https://www.youtube.com/watch?v=Q_bd7BFh0XY"
+                pawscriptManager.sourceURL = "https://www.youtube.com/watch?v=Ny3rvJWT5PM"
             }
         }) {
             Text(sourceKind.label)
@@ -432,13 +432,13 @@ struct PawscriptPanelView: View {
 
                 if let referenceText = referenceText {
                     VStack(alignment: .leading, spacing: 3) {
-                        Label("Reference values", systemImage: "ruler")
+                        Label("Substeps / reference", systemImage: "checklist")
                             .font(.system(size: 10, weight: .bold))
                             .foregroundColor(DS.Colors.accentText)
                         Text(referenceText)
                             .font(.system(size: 10, weight: .semibold, design: .monospaced))
                             .foregroundColor(DS.Colors.textPrimary)
-                            .lineLimit(4)
+                            .lineLimit(7)
                             .textSelection(.enabled)
                     }
                     .padding(7)
@@ -496,6 +496,10 @@ struct PawscriptPanelView: View {
 
         let value = (step.value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !value.isEmpty else { return nil }
+
+        if value.contains("\n") {
+            return value
+        }
 
         return value
             .replacingOccurrences(of: ". ", with: "\n")

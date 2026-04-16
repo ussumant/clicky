@@ -367,9 +367,14 @@ final class PawscriptSkillStore {
                 title: "Open an editable Paper canvas",
                 action: "navigate",
                 target: "https://paper.design/",
-                value: "https://paper.design/",
-                description: "Navigate to Paper, then open a signed-in editable Paper canvas before adding shader effects. If the screen is marketing, signup, login, or an empty workspace, hand off to the user to open the correct canvas.",
-                verification: "Continue only when an editable canvas or shader editor is visible. If not, hand off to the user and resume after they open the canvas.",
+                value: """
+                1. Open https://paper.design/
+                2. Sign in if Paper asks
+                3. Create or open any editable canvas
+                Good enough: a blank editable Paper canvas is visible
+                """,
+                description: "Open Paper and get to an editable canvas before drawing anything.",
+                verification: "A Paper canvas is visible and ready for shapes. Marketing pages, signup pages, or static galleries are not good enough.",
                 gotchaText: "If the browser lands on login, signup, pricing, or a static gallery, pause and ask the user to open an editable Paper canvas.",
                 estimatedTime: "1min"
             ),
@@ -380,9 +385,14 @@ final class PawscriptSkillStore {
                 title: "Handle login or canvas handoff",
                 action: "conditional",
                 target: "Paper editor state",
-                value: "Pause if confidence is below 0.75",
-                description: "Check whether the user is signed in and whether a canvas with shader controls is visible. If account, file, or canvas setup blocks progress, ask the user to complete it manually.",
-                verification: "The next screen has an editable canvas, a selected object, or visible shader controls. If the user corrected the screen, continue from that state.",
+                value: """
+                1. Complete login manually if needed
+                2. Pick any safe demo file or blank canvas
+                3. Press I'm done - continue
+                Good enough: the canvas is editable and Spanks can continue from this screen
+                """,
+                description: "Use this as the human checkpoint for account, file, or project setup.",
+                verification: "The user has confirmed the editable Paper canvas is ready.",
                 gotchaText: "Do not attempt to create accounts, enter private credentials, or change billing settings.",
                 estimatedTime: "1min"
             ),
@@ -390,12 +400,19 @@ final class PawscriptSkillStore {
                 id: UUID(uuidString: "66666666-6666-4666-8666-666666666603")!,
                 skillId: skillId,
                 number: 3,
-                title: "Draw the rounded card and inner circle",
+                title: "Draw the dark rounded card",
                 action: "configure",
                 target: "Rectangle tool, Fill, Radius, Width, Height",
-                value: "Card: 520x180, radius 44, fill #151515. Circle: 116x116, fill #2F7DFF, x near left edge, vertically centered.",
-                description: "Use the rectangle tool to create one card-sized rounded rectangle. Set it to roughly 520 by 180, radius about 44, and dark fill #151515. Add one 116 by 116 circle or rounded square on the left, centered vertically. If exact numeric inputs are not visible, use the closest visual size.",
-                verification: "A single dark rounded card is visible with one blue circular placeholder on its left side.",
+                value: """
+                1. Select Rectangle
+                2. Draw a wide horizontal card
+                3. Set W 520 / H 180 if fields are visible
+                4. Set radius 44 if visible
+                5. Set fill #151515
+                Good enough: a dark rounded card is on the canvas
+                """,
+                description: "Create the base shape for the Ask AI social graphic.",
+                verification: "A single dark rounded rectangle is visible. Exact dimensions are optional if it visually reads as a wide card.",
                 gotchaText: "Paper's layers feel reversed compared with Figma: lower items in the layers panel can appear visually above. If the circle disappears, check layer order.",
                 estimatedTime: "2min"
             ),
@@ -403,63 +420,139 @@ final class PawscriptSkillStore {
                 id: UUID(uuidString: "66666666-6666-4666-8666-666666666604")!,
                 skillId: skillId,
                 number: 4,
-                title: "Add the Liquid Metal shader",
+                title: "Add the left circle",
                 action: "configure",
-                target: "Shaders panel, Liquid Metal shader, opacity/background control",
-                value: "Liquid Metal on the left circle; background opacity 0 if visible.",
-                description: "Open the shaders/effects panel and select Liquid Metal. Place it over the blue left circle. Set any visible background opacity to 0, keep the shader circular, and resize it to stay inside the left circle. If Liquid Metal is unavailable, use the first metal-looking shader and continue.",
-                verification: "The left circle area now shows a metallic shader texture inside the card.",
-                gotchaText: "If Liquid Metal is not visible by exact name, choose the most obvious metal shader and keep moving.",
-                estimatedTime: "2min"
+                target: "Ellipse tool, Fill, Width, Height, Align",
+                value: """
+                1. Select Ellipse or Circle
+                2. Draw a circle inside the left side of the card
+                3. Set W 116 / H 116 if fields are visible
+                4. Set fill #2F7DFF
+                5. Center it vertically inside the card
+                Good enough: a blue circle sits inside the left side of the card
+                """,
+                description: "Add the circle that will receive the metal shader.",
+                verification: "The blue circle is visible on top of the card and roughly centered vertically.",
+                gotchaText: "If the circle disappears, check layer order before redrawing it.",
+                estimatedTime: "1min"
             ),
             SkillStep(
                 id: UUID(uuidString: "66666666-6666-4666-8666-666666666605")!,
                 skillId: skillId,
                 number: 5,
-                title: "Add a sparkle icon and Ask AI text",
+                title: "Add Liquid Metal to the circle",
                 action: "configure",
-                target: "Text tool and any sparkle/star icon",
-                value: "Text: Ask AI, white, 44px if possible. Icon: white sparkle/star, 40px, left of text.",
-                description: "Add the exact text 'Ask AI' in white, around 44px, centered vertically in the card to the right of the circle. Add any sparkle/star icon in white, about 40px, immediately left of the text. If icon import is slow, draw a simple star or skip the icon after saying so.",
-                verification: "The card reads Ask AI in white, with a sparkle/star icon or placeholder beside it.",
-                gotchaText: "If importing SVG is slow, skip the icon import and use any visible sparkle/star icon already available.",
-                estimatedTime: "1min"
+                target: "Shaders panel, Liquid Metal shader, opacity/background control",
+                value: """
+                1. Open Shaders or Effects
+                2. Choose Liquid Metal
+                3. Place it over the blue circle
+                4. Set background opacity to 0 if visible
+                5. Resize it to fit inside the circle
+                Good enough: the circle looks metallic
+                """,
+                description: "Apply one obvious metal shader treatment to the circle.",
+                verification: "The left circle area now has a metallic shader texture while staying inside the card.",
+                gotchaText: "If Liquid Metal is not visible by exact name, choose the most obvious metal-looking shader and keep moving.",
+                estimatedTime: "2min"
             ),
             SkillStep(
                 id: UUID(uuidString: "66666666-6666-4666-8666-666666666606")!,
                 skillId: skillId,
                 number: 6,
-                title: "Apply Neuron Noise to the text",
+                title: "Add the Ask AI text",
                 action: "configure",
-                target: "Neuron Noise shader, blending mode, color controls",
-                value: "Neuron Noise over text, Blend: Multiply, Scale: about 2, Brightness: about 70%.",
-                description: "Add Neuron Noise over the Ask AI text only. Set blend mode to Multiply if visible. Set scale near 2 and brightness near 70% if controls exist. Use a blue color and a gray color if color pickers are visible. If controls are hidden, make one visible noise/text change and advance.",
-                verification: "The Ask AI text has a subtle blue-gray shader/noise treatment while remaining readable.",
-                gotchaText: "Do not over-tune. Apply one visible Neuron Noise treatment and advance.",
-                estimatedTime: "2min"
+                target: "Text tool, color, size, alignment",
+                value: """
+                1. Select Text
+                2. Type Ask AI
+                3. Set color #FFFFFF
+                4. Set size 44 if visible
+                5. Place it to the right of the circle
+                Good enough: white Ask AI text is readable inside the card
+                """,
+                description: "Add the main label from the tutorial graphic.",
+                verification: "The card clearly reads Ask AI in white text.",
+                gotchaText: "If exact font controls are hard to find, prioritize readable white text over exact typography.",
+                estimatedTime: "1min"
             ),
             SkillStep(
                 id: UUID(uuidString: "66666666-6666-4666-8666-666666666607")!,
                 skillId: skillId,
                 number: 7,
-                title: "Add and tune the Pulsing Border",
+                title: "Add a sparkle icon",
                 action: "configure",
-                target: "Pulsing Border shader, roundness, opacity, color controls",
-                value: "Pulsing Border around card; Roundness 100%; background opacity 0; colors blue/green.",
-                description: "Add Pulsing Border around the outside of the card. Set roundness to 100% or maximum, set background opacity to 0 if visible, resize it to match the card bounds, then set red/orange colors to blue or green if color controls are visible.",
-                verification: "A pulsing or glowing rounded border frames the card without covering the icon or Ask AI text.",
-                gotchaText: "If color controls are not visible, keep the default border and advance. The key visible payoff is the border framing the card.",
+                target: "Icon, star, sparkle, or simple placeholder",
+                value: """
+                1. Add any sparkle/star icon
+                2. Set color #FFFFFF
+                3. Set size about 40
+                4. Place it left of Ask AI
+                5. Skip if icon sourcing is slow
+                Good enough: a sparkle, star, or simple placeholder is visible
+                """,
+                description: "Add the small visual cue next to the Ask AI text.",
+                verification: "A sparkle/star icon or acceptable placeholder appears between the circle and text.",
+                gotchaText: "If importing SVG is slow, skip the icon import and use any visible sparkle/star icon or simple placeholder.",
                 estimatedTime: "1min"
             ),
             SkillStep(
                 id: UUID(uuidString: "66666666-6666-4666-8666-666666666608")!,
                 skillId: skillId,
                 number: 8,
-                title: "Verify the final social graphic",
+                title: "Add Neuron Noise to the text",
+                action: "configure",
+                target: "Neuron Noise shader, blending mode, color controls",
+                value: """
+                1. Add Neuron Noise
+                2. Place it over the Ask AI text only
+                3. Set blend to Multiply if visible
+                4. Set scale about 2 if visible
+                5. Set brightness about 70% if visible
+                Good enough: the text has subtle texture but stays readable
+                """,
+                description: "Apply one visible texture treatment to the text without over-tuning.",
+                verification: "The Ask AI text has a subtle blue-gray shader/noise treatment while remaining readable.",
+                gotchaText: "Do not over-tune. Apply one visible Neuron Noise treatment and advance.",
+                estimatedTime: "2min"
+            ),
+            SkillStep(
+                id: UUID(uuidString: "66666666-6666-4666-8666-666666666609")!,
+                skillId: skillId,
+                number: 9,
+                title: "Add the Pulsing Border",
+                action: "configure",
+                target: "Pulsing Border shader, roundness, opacity, color controls",
+                value: """
+                1. Add Pulsing Border
+                2. Place it around the card
+                3. Set roundness to 100% if visible
+                4. Set background opacity to 0 if visible
+                5. Use blue/green colors if controls are visible
+                Good enough: a glowing rounded border frames the card
+                """,
+                description: "Frame the card with the final shader effect from the tutorial.",
+                verification: "A pulsing or glowing rounded border frames the card without covering the icon or Ask AI text.",
+                gotchaText: "If color controls are not visible, keep the default border and advance. The key visible payoff is the border framing the card.",
+                estimatedTime: "1min"
+            ),
+            SkillStep(
+                id: UUID(uuidString: "66666666-6666-4666-8666-666666666610")!,
+                skillId: skillId,
+                number: 10,
+                title: "Verify the final graphic",
                 action: "verify",
                 target: "Final Paper canvas",
-                value: "Ask AI shader card",
-                description: "Compare the result to the tutorial target: dark rounded card, metallic circle, sparkle icon, Ask AI text, subtle text shader, and pulsing border. Ask the user whether to keep it as a live Paper design or export later.",
+                value: """
+                Check: dark rounded card
+                Check: metal circle
+                Check: Ask AI text
+                Check: sparkle icon or placeholder
+                Check: text texture
+                Check: pulsing border
+                Good enough: a visible Ask AI shader card exists
+                """,
+                description: "Compare the result to the tutorial target and stop at visible completion.",
                 verification: "The user can point to the finished Ask AI-style graphic on the Paper canvas.",
                 gotchaText: "Do not chase export in the live demo. The win is that the saved YouTube tutorial became an active guided session.",
                 estimatedTime: "1min"
@@ -496,7 +589,7 @@ final class PawscriptSkillStore {
                     title: "Shader tuning is intentionally fuzzy",
                     description: "The creator experiments with colors, blend modes, scale, brightness, and border colors rather than following exact numeric values.",
                     source: "browser-use-hardening",
-                    stepNumber: 8,
+                    stepNumber: 9,
                     fix: "Make one visible improvement, verify readability, and move on instead of over-tuning.",
                     createdAt: createdAt
                 )
@@ -542,11 +635,12 @@ final class PawscriptSkillStore {
             ],
             sourceKind: .youtube,
             sourceURL: "https://www.youtube.com/watch?v=Ny3rvJWT5PM",
-            extractedSummary: "The video shows how to recreate a viral Ask AI-style social graphic in Paper.design. This demo version uses short deterministic guide steps: create a 520x180 dark rounded card, add a 116x116 left circle, place Liquid Metal inside it, add white Ask AI text, add a sparkle icon, apply Neuron Noise with Multiply to the text, add a rounded Pulsing Border, and stop at visual verification.",
+            extractedSummary: "The video shows how to recreate a viral Ask AI-style social graphic in Paper.design. This demo version breaks each step into concrete substeps with a Good enough checkpoint: create a 520x180 dark rounded card, add a 116x116 left circle, place Liquid Metal inside it, add white Ask AI text, add a sparkle icon, apply Neuron Noise with Multiply to the text, add a rounded Pulsing Border, and stop at visual verification.",
             toolsUsed: ["Paper.design", "Liquid Metal shader", "Remix Icon", "SVG import", "Text tool", "Neuron Noise", "Multiply blending", "Pulsing Border"],
             promptSnippets: [
                 "After setup, prefer Guide me: observe the current Paper canvas, point at likely controls, and let the human click.",
                 "If Paper asks for login, signup, payment, or project selection, ask the user to complete that step manually.",
+                "Show the user the substeps and Good enough checkpoint before moving to the next step.",
                 "Use the deterministic demo values: card 520x180 radius 44 fill #151515, circle 116x116 fill #2F7DFF, Ask AI white 44px, sparkle/star 40px.",
                 "Prefer visible labels and concepts from the video: rectangle, border radius, circle, shaders, Liquid Metal, sparkle SVG, Ask AI, Neuron Noise, Multiply, Pulsing Border.",
                 "Make visible design progress quickly: one metal shader, one text shader, one border effect.",

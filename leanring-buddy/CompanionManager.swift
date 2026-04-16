@@ -793,8 +793,8 @@ final class CompanionManager: ObservableObject {
             .replacingOccurrences(of: ". ", with: ".\n")
             .replacingOccurrences(of: "; ", with: "\n")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard cleaned.count > 180 else { return cleaned }
-        return String(cleaned.prefix(177)) + "..."
+        guard cleaned.count > 240 else { return cleaned }
+        return String(cleaned.prefix(237)) + "..."
     }
 
     private func moveSystemCursor(to appKitPoint: CGPoint) {

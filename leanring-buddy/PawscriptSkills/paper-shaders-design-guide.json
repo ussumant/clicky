@@ -1,45 +1,45 @@
 {
   "criteria" : [
     {
-      "criterion" : "A Browser Use agent can complete the public steps, pause for login or low-confidence UI states, and hand control back to the user for correction without losing progress.",
+      "criterion" : "Guide mode can take the user from a saved Paper.design YouTube tutorial to a visible Ask AI-style shader card using deterministic substeps and user correction.",
       "id" : "99999999-9999-4999-8999-999999999903",
       "isAutomated" : false,
       "isPassed" : null,
       "skillId" : "55555555-5555-4555-8555-555555555555"
     }
   ],
-  "customizationQuestion" : "What kind of graphic should Spanks help you make with Paper Shaders, and should the agent move fast or pause before changing the canvas?",
-  "extractedSummary" : "The Paper Shaders walkthrough becomes a browser-agent workflow: open Paper Shaders, enter an editable Paper canvas, pause for login or missing editor state, place a Warp shader, choose and tune a preset, export React code, add a Fluted Glass image filter, hand off if image capture is ambiguous, chain a Halftone shader, and optionally vectorize a flat image.",
+  "customizationQuestion" : "What should the Ask AI-style Paper card say, and should Spanks prioritize speed or visual polish?",
+  "extractedSummary" : "The video shows how to recreate a viral Ask AI-style social graphic in Paper.design. This demo version breaks each step into concrete substeps with a Good enough checkpoint: create a 520x180 dark rounded card, add a 116x116 left circle, place Liquid Metal inside it, add white Ask AI text, add a sparkle icon, apply Neuron Noise with Multiply to the text, add a rounded Pulsing Border, and stop at visual verification.",
   "gotchas" : [
     {
       "createdAt" : "2026-04-16T00:00:00Z",
-      "description" : "Presets are useful starting points, but a design can feel generic if the preset is not tuned.",
-      "fix" : "Choose a preset, then adjust parameters until the shader supports the specific graphic.",
+      "description" : "The tutorial notes that elements below in Paper's layers panel may appear above visually, which can surprise Figma users.",
+      "fix" : "If the metal shader, circle, or card disappears, inspect layer order before changing the design.",
       "id" : "88888888-8888-4888-8888-888888888803",
       "skillId" : "55555555-5555-4555-8555-555555555555",
       "source" : "youtube-captions-v1",
-      "stepNumber" : 2,
-      "title" : "Do not stop at presets"
+      "stepNumber" : 3,
+      "title" : "Paper layer order feels reversed"
     },
     {
       "createdAt" : "2026-04-16T00:00:00Z",
-      "description" : "Chained shaders can become visually noisy when every layer is strong.",
-      "fix" : "Reduce the strength of one shader or return to the original image and apply only the strongest effect.",
+      "description" : "The video uses Remix Icon and SVG copy/download, but a live demo should not get stuck browsing icon libraries.",
+      "fix" : "Use any available sparkle/star icon if SVG import is slow, then continue to the shader effects.",
       "id" : "88888888-8888-4888-8888-888888888804",
       "skillId" : "55555555-5555-4555-8555-555555555555",
       "source" : "youtube-captions-v1",
-      "stepNumber" : 6,
-      "title" : "Layer effects carefully"
+      "stepNumber" : 7,
+      "title" : "Icon sourcing can derail the demo"
     },
     {
       "createdAt" : "2026-04-16T00:00:00Z",
-      "description" : "The Paper editor, shader library, and export menu may expose different UI labels depending on account state or product changes.",
-      "fix" : "If the agent cannot identify the target control with high confidence, pause and ask the user to click the correct control, then continue from the resulting screen.",
+      "description" : "The creator experiments with colors, blend modes, scale, brightness, and border colors rather than following exact numeric values.",
+      "fix" : "Make one visible improvement, verify readability, and move on instead of over-tuning.",
       "id" : "88888888-8888-4888-8888-888888888805",
       "skillId" : "55555555-5555-4555-8555-555555555555",
       "source" : "browser-use-hardening",
-      "stepNumber" : 1,
-      "title" : "Use handoff when UI confidence drops"
+      "stepNumber" : 9,
+      "title" : "Shader tuning is intentionally fuzzy"
     }
   ],
   "prerequisites" : [
@@ -54,32 +54,34 @@
       "title" : "Paper editor access"
     },
     {
-      "actionLabel" : "Image ready",
-      "detail" : "Have an image ready to upload, or let the user approve a generated image before the agent pulls it into the image-filter shader.",
+      "actionLabel" : "Icon ready",
+      "detail" : "The video pulls a sparkle icon from Remix Icon. For the demo, any visible sparkle/star SVG or icon is acceptable if Remix Icon slows things down.",
       "id" : "77777777-7777-4777-8777-777777777704",
       "isBlocking" : false,
       "kind" : "asset",
       "source" : "youtube-captions-v1",
-      "stepNumber" : 6,
-      "title" : "Prepare an image source"
+      "stepNumber" : 7,
+      "title" : "Have a sparkle icon fallback"
     },
     {
-      "actionLabel" : "Fast handoff OK",
-      "detail" : "Tell the user that the agent will move quickly through obvious UI states, but will pause when it cannot confidently identify a button, shader control, image source, or export menu.",
+      "actionLabel" : "Guide mode OK",
+      "detail" : "Browser Use can be flaky inside Paper's editor. For the deterministic demo, use Spanks as a screen-observing guide after the setup checkpoint.",
       "id" : "77777777-7777-4777-8777-777777777705",
       "isBlocking" : false,
       "kind" : "safety",
       "source" : "browser-use-hardening",
       "stepNumber" : 1,
-      "title" : "Confirm correction handoff"
+      "title" : "Use Guide me for the live demo"
     }
   ],
   "promptSnippets" : [
-    "Move fast through visible Paper controls, but pause for human correction when confidence is below 0.75 or the screen differs from the expected state.",
-    "If Paper asks for login, signup, payment, or project selection, stop and ask the user to complete that step manually.",
-    "Prefer visible labels: Warp, Presets, Speed, Copy as React, Fluted Glass, Edit, eyedropper, Halftone, Vintage, Vectorize.",
-    "After every material canvas change, verify the visible result before continuing.",
-    "If image capture, shader chaining, or export is ambiguous, ask the user to click or select the target, then resume from the new screen."
+    "After setup, prefer Guide me: observe the current Paper canvas, point at likely controls, and let the human click.",
+    "If Paper asks for login, signup, payment, or project selection, ask the user to complete that step manually.",
+    "Show the user the substeps and Good enough checkpoint before moving to the next step.",
+    "Use the deterministic demo values: card 520x180 radius 44 fill #151515, circle 116x116 fill #2F7DFF, Ask AI white 44px, sparkle/star 40px.",
+    "Prefer visible labels and concepts from the video: rectangle, border radius, circle, shaders, Liquid Metal, sparkle SVG, Ask AI, Neuron Noise, Multiply, Pulsing Border.",
+    "Make visible design progress quickly: one metal shader, one text shader, one border effect.",
+    "Do not chase export during the live demo. End when the Ask AI shader card is visibly complete."
   ],
   "skill" : {
     "agentCompletions" : 0,
@@ -93,18 +95,18 @@
     "id" : "55555555-5555-4555-8555-555555555555",
     "name" : "paper-shaders-design-guide",
     "sourceSessionId" : null,
-    "title" : "Use Paper Shaders with Browser Use handoff",
+    "title" : "Create an Ask AI shader card in Paper",
     "track" : "design",
     "updatedAt" : "2026-04-16T00:00:00Z",
     "version" : 1,
-    "yamlContent" : "name: paper-shaders-design-guide\nsteps:\n  - title: Open an editable Paper canvas\n  - title: Handle login or canvas handoff\n  - title: Add or select Warp shader\n  - title: Choose and tune a preset\n  - title: Freeze motion or export React\n  - title: Add Fluted Glass image filter\n  - title: Chain Halftone if useful\n  - title: Vectorize and verify final asset\n"
+    "yamlContent" : "name: paper-shaders-design-guide\nsteps:\n  - title: Open an editable Paper canvas\n  - title: Handle login or canvas handoff\n  - title: Draw the dark rounded card\n  - title: Add the left circle\n  - title: Add Liquid Metal to the circle\n  - title: Add the Ask AI text\n  - title: Add a sparkle icon\n  - title: Add Neuron Noise to the text\n  - title: Add the Pulsing Border\n  - title: Verify the final graphic\n"
   },
   "sourceKind" : "youtube",
-  "sourceURL" : "https://www.youtube.com/watch?v=Q_bd7BFh0XY",
+  "sourceURL" : "https://www.youtube.com/watch?v=Ny3rvJWT5PM",
   "steps" : [
     {
       "action" : "navigate",
-      "description" : "Navigate to Paper, then open a signed-in editable Paper canvas before adding shader effects. If the screen is marketing, signup, login, or an empty workspace, hand off to the user to open the correct canvas.",
+      "description" : "Open Paper and get to an editable canvas before drawing anything.",
       "estimatedTime" : "1min",
       "gotchaText" : "If the browser lands on login, signup, pricing, or a static gallery, pause and ask the user to open an editable Paper canvas.",
       "id" : "66666666-6666-4666-8666-666666666601",
@@ -113,12 +115,12 @@
       "skillId" : "55555555-5555-4555-8555-555555555555",
       "target" : "https://paper.design/",
       "title" : "Open an editable Paper canvas",
-      "value" : "https://paper.design/",
-      "verification" : "Continue only when an editable canvas or shader editor is visible. If not, hand off to the user and resume after they open the canvas."
+      "value" : "1. Open https://paper.design/\n2. Sign in if Paper asks\n3. Create or open any editable canvas\nGood enough: a blank editable Paper canvas is visible",
+      "verification" : "A Paper canvas is visible and ready for shapes. Marketing pages, signup pages, or static galleries are not good enough."
     },
     {
       "action" : "conditional",
-      "description" : "Check whether the user is signed in and whether a canvas with shader controls is visible. If account, file, or canvas setup blocks progress, ask the user to complete it manually.",
+      "description" : "Use this as the human checkpoint for account, file, or project setup.",
       "estimatedTime" : "1min",
       "gotchaText" : "Do not attempt to create accounts, enter private credentials, or change billing settings.",
       "id" : "66666666-6666-4666-8666-666666666602",
@@ -127,101 +129,130 @@
       "skillId" : "55555555-5555-4555-8555-555555555555",
       "target" : "Paper editor state",
       "title" : "Handle login or canvas handoff",
-      "value" : "Pause if confidence is below 0.75",
-      "verification" : "The next screen has an editable canvas, a selected object, or visible shader controls. If the user corrected the screen, continue from that state."
+      "value" : "1. Complete login manually if needed\n2. Pick any safe demo file or blank canvas\n3. Press I'm done - continue\nGood enough: the canvas is editable and Spanks can continue from this screen",
+      "verification" : "The user has confirmed the editable Paper canvas is ready."
     },
     {
-      "action" : "select",
-      "description" : "Find a Warp shader in the current canvas or shader library. If a Warp shader is already selected, keep it. Otherwise, add or open Warp from the visible shader list.",
+      "action" : "configure",
+      "description" : "Create the base shape for the Ask AI social graphic.",
       "estimatedTime" : "2min",
-      "gotchaText" : "If Warp is not visible, choose the first available abstract or generative shader and tell the user what changed.",
+      "gotchaText" : "Paper's layers feel reversed compared with Figma: lower items in the layers panel can appear visually above. If the circle disappears, check layer order.",
       "id" : "66666666-6666-4666-8666-666666666603",
       "number" : 3,
       "screenshotPath" : null,
       "skillId" : "55555555-5555-4555-8555-555555555555",
-      "target" : "Warp shader",
-      "title" : "Add or select Warp shader",
-      "value" : "Warp",
-      "verification" : "A Warp or comparable generative shader is selected and its preset or parameter controls are visible."
+      "target" : "Rectangle tool, Fill, Radius, Width, Height",
+      "title" : "Draw the dark rounded card",
+      "value" : "1. Select Rectangle\n2. Draw a wide horizontal card\n3. Set W 520 / H 180 if fields are visible\n4. Set radius 44 if visible\n5. Set fill #151515\nGood enough: a dark rounded card is on the canvas",
+      "verification" : "A single dark rounded rectangle is visible. Exact dimensions are optional if it visually reads as a wide card."
     },
     {
       "action" : "configure",
-      "description" : "Open the preset control, choose a visually distinct preset, then adjust one or two obvious parameters such as scale, intensity, shape, spacing, or distortion. Move fast, but do not drag unknown controls repeatedly.",
-      "estimatedTime" : "2min",
-      "gotchaText" : "If a slider label or control purpose is unclear, make one small adjustment and verify the visual change before continuing.",
+      "description" : "Add the circle that will receive the metal shader.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "If the circle disappears, check layer order before redrawing it.",
       "id" : "66666666-6666-4666-8666-666666666604",
       "number" : 4,
       "screenshotPath" : null,
       "skillId" : "55555555-5555-4555-8555-555555555555",
-      "target" : "Presets and shader parameter controls",
-      "title" : "Choose and tune a preset",
-      "value" : "Pick one preset, then adjust 1-2 controls",
-      "verification" : "The selected shader visibly changes from the starting preset, and the canvas still looks usable."
+      "target" : "Ellipse tool, Fill, Width, Height, Align",
+      "title" : "Add the left circle",
+      "value" : "1. Select Ellipse or Circle\n2. Draw a circle inside the left side of the card\n3. Set W 116 / H 116 if fields are visible\n4. Set fill #2F7DFF\n5. Center it vertically inside the card\nGood enough: a blue circle sits inside the left side of the card",
+      "verification" : "The blue circle is visible on top of the card and roughly centered vertically."
     },
     {
       "action" : "configure",
-      "description" : "If a Speed control is visible, set it to zero when the user wants a static texture. If an export menu or Copy as React button is visible, copy the shader code. If export is hidden, skip export and continue after noting it.",
-      "estimatedTime" : "1min",
-      "gotchaText" : "Do not get stuck hunting for export. The core guide can continue without a React copy.",
+      "description" : "Apply one obvious metal shader treatment to the circle.",
+      "estimatedTime" : "2min",
+      "gotchaText" : "If Liquid Metal is not visible by exact name, choose the most obvious metal-looking shader and keep moving.",
       "id" : "66666666-6666-4666-8666-666666666605",
       "number" : 5,
       "screenshotPath" : null,
       "skillId" : "55555555-5555-4555-8555-555555555555",
-      "target" : "Speed control or Copy as React",
-      "title" : "Freeze motion or export React",
-      "value" : "Speed 0 or Copy as React",
-      "verification" : "Either motion is intentionally set, React code has been copied, or the step was skipped with a clear note."
+      "target" : "Shaders panel, Liquid Metal shader, opacity/background control",
+      "title" : "Add Liquid Metal to the circle",
+      "value" : "1. Open Shaders or Effects\n2. Choose Liquid Metal\n3. Place it over the blue circle\n4. Set background opacity to 0 if visible\n5. Resize it to fit inside the circle\nGood enough: the circle looks metallic",
+      "verification" : "The left circle area now has a metallic shader texture while staying inside the card."
     },
     {
       "action" : "configure",
-      "description" : "Add or select the Fluted Glass image filter. Use Edit to upload an image, the eyedropper to capture a visible image, or Paper image generation if available. Pause for user correction if the image source is ambiguous.",
-      "estimatedTime" : "2min",
-      "gotchaText" : "Image upload and eyedropper selection are likely handoff points. Ask the user to pick the image if the target is not obvious.",
+      "description" : "Add the main label from the tutorial graphic.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "If exact font controls are hard to find, prioritize readable white text over exact typography.",
       "id" : "66666666-6666-4666-8666-666666666606",
       "number" : 6,
       "screenshotPath" : null,
       "skillId" : "55555555-5555-4555-8555-555555555555",
-      "target" : "Fluted Glass image input",
-      "title" : "Add Fluted Glass image filter",
-      "value" : "Fluted Glass",
-      "verification" : "An image appears inside the Fluted Glass shader and the filter visibly changes the image."
+      "target" : "Text tool, color, size, alignment",
+      "title" : "Add the Ask AI text",
+      "value" : "1. Select Text\n2. Type Ask AI\n3. Set color #FFFFFF\n4. Set size 44 if visible\n5. Place it to the right of the circle\nGood enough: white Ask AI text is readable inside the card",
+      "verification" : "The card clearly reads Ask AI in white text."
     },
     {
       "action" : "configure",
-      "description" : "If the filtered image looks stable, add a Halftone shader or choose a visible halftone or vintage preset. Skip this step if the canvas is already visually busy.",
+      "description" : "Add the small visual cue next to the Ask AI text.",
       "estimatedTime" : "1min",
-      "gotchaText" : "The correct fast move is sometimes to skip the extra shader. Ask the user if the result is already good enough.",
+      "gotchaText" : "If importing SVG is slow, skip the icon import and use any visible sparkle/star icon or simple placeholder.",
       "id" : "66666666-6666-4666-8666-666666666607",
       "number" : 7,
       "screenshotPath" : null,
       "skillId" : "55555555-5555-4555-8555-555555555555",
-      "target" : "Halftone shader or vintage preset",
-      "title" : "Chain Halftone if useful",
-      "value" : "Halftone or Vintage",
-      "verification" : "The added shader makes the graphic more distinctive without obscuring the image. If not, undo or ask the user whether to keep it."
+      "target" : "Icon, star, sparkle, or simple placeholder",
+      "title" : "Add a sparkle icon",
+      "value" : "1. Add any sparkle/star icon\n2. Set color #FFFFFF\n3. Set size about 40\n4. Place it left of Ask AI\n5. Skip if icon sourcing is slow\nGood enough: a sparkle, star, or simple placeholder is visible",
+      "verification" : "A sparkle/star icon or acceptable placeholder appears between the circle and text."
     },
     {
-      "action" : "verify",
-      "description" : "If a flat generated image is selected and Vectorize is visible in the context menu, run Vectorize. Otherwise skip vectorization and verify the final asset format with the user.",
+      "action" : "configure",
+      "description" : "Apply one visible texture treatment to the text without over-tuning.",
       "estimatedTime" : "2min",
-      "gotchaText" : "Right-click context menus are brittle for browser agents. If Vectorize is not visible immediately, ask the user to open it or skip.",
+      "gotchaText" : "Do not over-tune. Apply one visible Neuron Noise treatment and advance.",
       "id" : "66666666-6666-4666-8666-666666666608",
       "number" : 8,
       "screenshotPath" : null,
       "skillId" : "55555555-5555-4555-8555-555555555555",
-      "target" : "Vectorize and final asset",
-      "title" : "Vectorize and verify final asset",
-      "value" : "Vectorize if visible",
-      "verification" : "The user confirms the result and export path: live shader, static texture, React code, or SVG."
+      "target" : "Neuron Noise shader, blending mode, color controls",
+      "title" : "Add Neuron Noise to the text",
+      "value" : "1. Add Neuron Noise\n2. Place it over the Ask AI text only\n3. Set blend to Multiply if visible\n4. Set scale about 2 if visible\n5. Set brightness about 70% if visible\nGood enough: the text has subtle texture but stays readable",
+      "verification" : "The Ask AI text has a subtle blue-gray shader/noise treatment while remaining readable."
+    },
+    {
+      "action" : "configure",
+      "description" : "Frame the card with the final shader effect from the tutorial.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "If color controls are not visible, keep the default border and advance. The key visible payoff is the border framing the card.",
+      "id" : "66666666-6666-4666-8666-666666666609",
+      "number" : 9,
+      "screenshotPath" : null,
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "target" : "Pulsing Border shader, roundness, opacity, color controls",
+      "title" : "Add the Pulsing Border",
+      "value" : "1. Add Pulsing Border\n2. Place it around the card\n3. Set roundness to 100% if visible\n4. Set background opacity to 0 if visible\n5. Use blue/green colors if controls are visible\nGood enough: a glowing rounded border frames the card",
+      "verification" : "A pulsing or glowing rounded border frames the card without covering the icon or Ask AI text."
+    },
+    {
+      "action" : "verify",
+      "description" : "Compare the result to the tutorial target and stop at visible completion.",
+      "estimatedTime" : "1min",
+      "gotchaText" : "Do not chase export in the live demo. The win is that the saved YouTube tutorial became an active guided session.",
+      "id" : "66666666-6666-4666-8666-666666666610",
+      "number" : 10,
+      "screenshotPath" : null,
+      "skillId" : "55555555-5555-4555-8555-555555555555",
+      "target" : "Final Paper canvas",
+      "title" : "Verify the final graphic",
+      "value" : "Check: dark rounded card\nCheck: metal circle\nCheck: Ask AI text\nCheck: sparkle icon or placeholder\nCheck: text texture\nCheck: pulsing border\nGood enough: a visible Ask AI shader card exists",
+      "verification" : "The user can point to the finished Ask AI-style graphic on the Paper canvas."
     }
   ],
   "toolsUsed" : [
-    "Paper",
-    "Paper Shaders",
-    "Shader presets",
-    "Image generation",
-    "Eyedropper image capture",
-    "Copy as React",
-    "Vectorize"
+    "Paper.design",
+    "Liquid Metal shader",
+    "Remix Icon",
+    "SVG import",
+    "Text tool",
+    "Neuron Noise",
+    "Multiply blending",
+    "Pulsing Border"
   ]
 }
