@@ -215,7 +215,7 @@ final class PawscriptExecutionManager: ObservableObject {
         if needsPrerequisiteConfirmation {
             prerequisitesConfirmed = true
             pendingModeAfterPrerequisites = nil
-            addEvent(title: "Agent will verify setup", detail: "Browser Use will open Pawscript's own browser profile and pause if login or setup is needed.")
+            addEvent(title: "Agent will verify setup", detail: "Pawscript Chrome will open the page and pause if login or setup is needed.")
         }
         activeMode = .watchMe
         runState = .running
@@ -228,8 +228,8 @@ final class PawscriptExecutionManager: ObservableObject {
             sourceURL: sourceURL,
             currentStep: currentStep
         )
-        addEvent(title: "Browser Use starting", detail: "Opening a visible browser for this skill.")
-        announce("Watch Spanks do it. I am opening the Pawscript browser profile. If login appears, I will pause and let you take over.")
+        addEvent(title: "Pawscript Chrome starting", detail: "Opening one dedicated Chrome window for this skill.")
+        announce("Watch Spanks do it. I am opening Pawscript Chrome. If login appears, I will pause and let you take over in that same window.")
         dismissMenuPanel()
 
         currentRunTask?.cancel()
@@ -692,14 +692,16 @@ final class PawscriptExecutionManager: ObservableObject {
             announce("Spanks is back in the driver seat.")
         } else if event.type == "stopped" {
             browserUseStopRequested = true
-        } else if event.type == "start" || event.type == "running" || event.type == "complete" {
+        } else if event.type == "start" || event.type == "browser_launching" || event.type == "browser_ready" || event.type == "running" || event.type == "complete" {
             announce(Self.shortText(event.message))
         }
     }
 
     private func browserEventTitle(_ type: String) -> String {
         switch type {
-        case "start": return "Browser opened"
+        case "start": return "Browser starting"
+        case "browser_launching": return "Opening Pawscript Chrome"
+        case "browser_ready": return "Pawscript Chrome ready"
         case "running": return "Spanks acting"
         case "complete": return "Agent finished"
         case "error": return "Agent error"

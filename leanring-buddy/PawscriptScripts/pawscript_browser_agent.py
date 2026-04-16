@@ -8,7 +8,11 @@ JSONL status events for the Swift app.
 import asyncio
 import json
 import os
+import subprocess
 import sys
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 
@@ -58,6 +62,91 @@ def clean_handoff_message(text):
     if marker in text:
         return text.split(marker, 1)[1].strip().splitlines()[0][:500]
     return text.strip()[:500] or "The browser workflow needs a human checkpoint before it can continue."
+
+
+def chrome_binary_path():
+    return os.environ.get(
+        "PAWSCRIPT_CHROME_PATH",
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    )
+
+
+def preferred_debug_port():
+    raw_port = os.environ.get("PAWSCRIPT_CHROME_DEBUG_PORT", "9339")
+    try:
+        return int(raw_port)
+    except ValueError:
+        return 9339
+
+
+async def wait_for_cdp(port, timeout_seconds=8):
+    deadline = time.monotonic() + timeout_seconds
+    version_url = f"http://127.0.0.1:{port}/json/version"
+    last_error = None
+
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(version_url, timeout=0.35) as response:
+                if response.status == 200:
+                    json.loads(response.read().decode("utf-8"))
+                    return f"http://127.0.0.1:{port}"
+        except (OSError, urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+            last_error = exc
+
+        await asyncio.sleep(0.2)
+
+    detail = f": {last_error}" if last_error else ""
+    raise RuntimeError(f"Chrome CDP did not become ready on port {port}{detail}")
+
+
+async def existing_cdp_url(port):
+    try:
+        return await wait_for_cdp(port, timeout_seconds=0.4)
+    except Exception:
+        return None
+
+
+async def launch_pawscript_chrome(start_url, profile_dir, preferred_port):
+    chrome_path = chrome_binary_path()
+    if not Path(chrome_path).exists():
+        raise FileNotFoundError(f"Google Chrome was not found at {chrome_path}")
+
+    profile_path = Path(profile_dir).expanduser()
+    profile_path.mkdir(parents=True, exist_ok=True)
+    launch_url = start_url or "about:blank"
+    last_error = None
+
+    for port in range(preferred_port, preferred_port + 11):
+        current_cdp_url = await existing_cdp_url(port)
+        if current_cdp_url:
+            return None, current_cdp_url, port
+
+        args = [
+            chrome_path,
+            f"--remote-debugging-port={port}",
+            f"--user-data-dir={profile_path}",
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--new-window",
+            launch_url,
+        ]
+        process = subprocess.Popen(
+            args,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+
+        try:
+            cdp_url = await wait_for_cdp(port, timeout_seconds=8)
+            return process, cdp_url, port
+        except Exception as exc:
+            last_error = exc
+            if process.poll() is None:
+                process.terminate()
+            await asyncio.sleep(0.2)
+
+    raise RuntimeError(f"Could not launch Pawscript Chrome with CDP: {last_error}")
 
 
 async def wait_for_human_signal(control_dir):
@@ -180,24 +269,7 @@ def first_blocking_prerequisite(payload):
     return None
 
 
-async def open_page_for_handoff(browser_session, url):
-    if browser_session is None or not url:
-        return
-
-    await asyncio.wait_for(browser_session.start(), timeout=15)
-    page = await browser_session.get_current_page()
-    if page is None:
-        page = await asyncio.wait_for(browser_session.new_page("about:blank"), timeout=10)
-
-    await asyncio.wait_for(page.goto(url), timeout=10)
-
-    try:
-        await page.evaluate("(url) => { window.location.href = url; return window.location.href }", url)
-    except Exception:
-        pass
-
-
-async def maybe_run_prerequisite_handoff(payload, browser_session, control_dir):
+async def maybe_run_prerequisite_handoff(payload, control_dir):
     prerequisite = first_blocking_prerequisite(payload)
     if not prerequisite:
         return None
@@ -207,11 +279,7 @@ async def maybe_run_prerequisite_handoff(payload, browser_session, control_dir):
     if url:
         message = f"{message} I opened {url}; sign in or open the editable workspace, then press Continue."
 
-    try:
-        await open_page_for_handoff(browser_session, url)
-        emit("needs_human", message)
-    except Exception as exc:
-        emit("needs_human", f"{message} I tried to open the start page, but Browser Use reported: {exc}")
+    emit("needs_human", message)
 
     signal = await wait_for_human_signal(control_dir)
     if signal.get("action") == "stop":
@@ -221,6 +289,23 @@ async def maybe_run_prerequisite_handoff(payload, browser_session, control_dir):
     resume_note = signal.get("note") or "User resolved the blocker."
     emit("resumed", resume_note)
     return {"resume_note": resume_note, "message": message}
+
+
+async def ensure_start_url(browser_session, start_url):
+    if not start_url or start_url == "about:blank":
+        return
+
+    try:
+        await asyncio.wait_for(browser_session.start(), timeout=15)
+        page = await browser_session.get_current_page()
+        if page is None:
+            page = await asyncio.wait_for(browser_session.new_page("about:blank"), timeout=10)
+
+        await asyncio.wait_for(page.goto(start_url), timeout=10)
+        await page.evaluate("(url) => { window.location.href = url; return window.location.href }", start_url)
+    except Exception as exc:
+        emit("browser_ready", f"Pawscript Chrome is open. Start-page confirmation was skipped: {exc}")
+        pass
 
 
 async def main():
@@ -238,10 +323,7 @@ async def main():
 
     try:
         from browser_use import Agent
-        try:
-            from browser_use import BrowserSession
-        except Exception:
-            BrowserSession = None
+        from browser_use import BrowserSession
         try:
             from browser_use.llm import ChatOpenAI
         except Exception:
@@ -251,26 +333,31 @@ async def main():
         return 2
 
     task = build_task(payload)
-    emit("start", "Browser Use is opening a visible browser.")
+    emit("start", "Browser Use is preparing Pawscript Chrome.")
 
     llm = ChatOpenAI(model="gpt-4o-mini")
-    browser_profile_dir = os.environ.get("PAWSCRIPT_BROWSER_PROFILE_DIR")
+    browser_profile_dir = os.environ.get("PAWSCRIPT_BROWSER_PROFILE_DIR") or str(
+        Path.home() / "Library/Application Support/Pawscript/browser-profile"
+    )
     control_dir = os.environ.get("PAWSCRIPT_CONTROL_DIR")
+    start_url = first_navigate_url(payload) or "about:blank"
+    preferred_port = preferred_debug_port()
 
-    if BrowserSession is not None:
-        browser_kwargs = {
-            "headless": False,
-            "keep_alive": True,
-        }
-        if browser_profile_dir:
-            Path(browser_profile_dir).mkdir(parents=True, exist_ok=True)
-            browser_kwargs["user_data_dir"] = browser_profile_dir
-            emit("profile", "Using Pawscript's persistent browser profile.")
-        browser_session = BrowserSession(**browser_kwargs)
-    else:
-        browser_session = None
+    try:
+        emit("browser_launching", f"Opening Pawscript Chrome at {start_url}.")
+        _chrome_process, cdp_url, cdp_port = await launch_pawscript_chrome(
+            start_url,
+            browser_profile_dir,
+            preferred_port,
+        )
+        emit("browser_ready", f"Pawscript Chrome ready on CDP port {cdp_port}.")
+        browser_session = BrowserSession(cdp_url=cdp_url, keep_alive=True)
+        await ensure_start_url(browser_session, start_url)
+    except Exception as exc:
+        emit("error", f"Pawscript Chrome failed to launch or attach: {exc}")
+        return 2
 
-    prerequisite_handoff = await maybe_run_prerequisite_handoff(payload, browser_session, control_dir)
+    prerequisite_handoff = await maybe_run_prerequisite_handoff(payload, control_dir)
     if prerequisite_handoff and prerequisite_handoff.get("stopped"):
         return 4
     if prerequisite_handoff:

@@ -70,6 +70,7 @@ final class PawscriptBrowserUseExecutor {
         let browserProfileDirectory = try makeBrowserProfileDirectory()
         runLogger?.addArtifact(kind: "browser-control", path: controlDirectory.path)
         runLogger?.addArtifact(kind: "browser-profile", path: browserProfileDirectory.path)
+        runLogger?.addArtifact(kind: "chrome-debug-port", path: "9339")
 
         let output = try await runProcess(
             pythonPath: pythonPath,
@@ -325,6 +326,7 @@ final class PawscriptBrowserUseExecutor {
         environment["BROWSER_USE_HEADLESS"] = "false"
         environment["PAWSCRIPT_CONTROL_DIR"] = controlDirectory.path
         environment["PAWSCRIPT_BROWSER_PROFILE_DIR"] = browserProfileDirectory.path
+        environment["PAWSCRIPT_CHROME_DEBUG_PORT"] = "9339"
         return environment
     }
 }
