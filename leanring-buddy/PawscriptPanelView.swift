@@ -181,6 +181,12 @@ struct PawscriptPanelView: View {
             if pawscriptManager.activeMode == .doTogether {
                 HStack(spacing: 6) {
                     runButton(
+                        title: pawscriptManager.showInstructionBubble ? "Hide tips" : "Show tips",
+                        systemImage: pawscriptManager.showInstructionBubble ? "bubble.left.and.bubble.right.fill" : "bubble.left",
+                        isEnabled: true,
+                        action: { pawscriptManager.setShowInstructionBubble(!pawscriptManager.showInstructionBubble) }
+                    )
+                    runButton(
                         title: pawscriptManager.canResumeGuide ? "Resume" : "Pause",
                         systemImage: pawscriptManager.canResumeGuide ? "play.fill" : "pause.fill",
                         isEnabled: pawscriptManager.canPauseGuide || pawscriptManager.canResumeGuide,

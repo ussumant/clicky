@@ -26,6 +26,9 @@ final class PawscriptExecutionManager: ObservableObject {
     @Published private(set) var latestRunLogURL: URL?
     @Published private(set) var browserUseHandoffActive: Bool = false
     @Published private(set) var browserUseHandoffMessage: String?
+    @Published var showInstructionBubble: Bool = UserDefaults.standard.object(forKey: "pawscriptShowInstructionBubble") == nil
+        ? true
+        : UserDefaults.standard.bool(forKey: "pawscriptShowInstructionBubble")
 
     private let skillStore: PawscriptSkillStore
     private let sourceExtractor: PawscriptSourceExtractor
@@ -119,6 +122,11 @@ final class PawscriptExecutionManager: ObservableObject {
     func openLatestRunLog() {
         guard let latestRunLogURL else { return }
         NSWorkspace.shared.open(latestRunLogURL)
+    }
+
+    func setShowInstructionBubble(_ show: Bool) {
+        showInstructionBubble = show
+        UserDefaults.standard.set(show, forKey: "pawscriptShowInstructionBubble")
     }
 
     func loadSelectedSource() {

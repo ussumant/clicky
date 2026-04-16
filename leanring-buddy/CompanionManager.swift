@@ -753,7 +753,7 @@ final class CompanionManager: ObservableObject {
             y: min(max(mouseLocation.y - 48, screen.frame.minY + 40), screen.frame.maxY - 40)
         )
 
-        detectedElementBubbleText = step.title
+        detectedElementBubbleText = pawscriptExecutionManager.showInstructionBubble ? Self.pawscriptInstructionText(for: step) : nil
         detectedElementScreenLocation = targetLocation
         detectedElementDisplayFrame = screen.frame
         moveSystemCursor(to: targetLocation)
@@ -768,10 +768,33 @@ final class CompanionManager: ObservableObject {
         let targetLocation = CGPoint(x: x, y: y)
         let screen = NSScreen.screens.first(where: { $0.frame.contains(targetLocation) }) ?? NSScreen.main
 
-        detectedElementBubbleText = match.hint.isEmpty ? step.title : match.hint
+        detectedElementBubbleText = pawscriptExecutionManager.showInstructionBubble
+            ? Self.pawscriptInstructionText(for: step, hint: match.hint)
+            : nil
         detectedElementScreenLocation = targetLocation
         detectedElementDisplayFrame = screen?.frame
         moveSystemCursor(to: targetLocation)
+    }
+
+    private static func pawscriptInstructionText(for step: SkillStep, hint: String? = nil) -> String {
+        if let hint,
+           !hint.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return shortBubbleText(hint)
+        }
+
+        let value = (step.value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let description = step.description.trimmingCharacters(in: .whitespacesAndNewlines)
+        let combined = value.isEmpty ? description : "\(description)\n\(value)"
+        return shortBubbleText(combined.isEmpty ? step.title : combined)
+    }
+
+    private static func shortBubbleText(_ text: String) -> String {
+        let cleaned = text
+            .replacingOccurrences(of: ". ", with: ".\n")
+            .replacingOccurrences(of: "; ", with: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard cleaned.count > 180 else { return cleaned }
+        return String(cleaned.prefix(177)) + "..."
     }
 
     private func moveSystemCursor(to appKitPoint: CGPoint) {
