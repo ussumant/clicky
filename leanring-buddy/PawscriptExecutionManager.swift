@@ -38,6 +38,7 @@ final class PawscriptExecutionManager: ObservableObject {
     private var currentRunTask: Task<Void, Never>?
     private var stuckSince: Date?
     private var lastCapturedStuckKey: String?
+    private var pawscriptChromeProcess: Process?
     private var pendingModeAfterPrerequisites: PawscriptExecutionMode?
     private var browserUseStopRequested = false
 
@@ -216,6 +217,9 @@ final class PawscriptExecutionManager: ObservableObject {
             return
         }
         activePackage = urlResolver.normalizedPackage(activePackage)
+        if prerequisitesConfirmed {
+            activePackage = packageWithoutBlockingPrerequisites(activePackage)
+        }
         self.activePackage = activePackage
         if needsPrerequisiteConfirmation {
             prerequisitesConfirmed = true
@@ -406,7 +410,7 @@ final class PawscriptExecutionManager: ObservableObject {
         activePackage = urlResolver.normalizedPackage(activePackage)
         self.activePackage = activePackage
         guard !needsPrerequisiteConfirmation else {
-            pendingModeAfterPrerequisites = .doTogether
+            pendingModeAfterPrerequisites = .watchMe
             pauseForPrerequisites(activePackage)
             return
         }
@@ -594,8 +598,8 @@ final class PawscriptExecutionManager: ObservableObject {
         }
 
         if let url = prerequisiteURL(for: package),
-           NSWorkspace.shared.open(url) {
-            addEvent(title: "Opened setup page", detail: url.absoluteString)
+           openPawscriptChrome(at: url) {
+            addEvent(title: "Opened Pawscript Chrome", detail: url.absoluteString)
         }
 
         dismissMenuPanel()
@@ -631,6 +635,49 @@ final class PawscriptExecutionManager: ObservableObject {
             addEvent(title: "Setup pointing skipped", detail: error.localizedDescription)
             announce("I opened the page. Sign in or prepare the session, then tell me you are done and I will continue.")
         }
+    }
+
+    private func openPawscriptChrome(at url: URL) -> Bool {
+        let chromePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        guard FileManager.default.isExecutableFile(atPath: chromePath) else {
+            return NSWorkspace.shared.open(url)
+        }
+
+        do {
+            let profileDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("Pawscript", isDirectory: true)
+                .appendingPathComponent("browser-profile", isDirectory: true)
+            try FileManager.default.createDirectory(at: profileDirectory, withIntermediateDirectories: true)
+
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: chromePath)
+            process.arguments = [
+                "--remote-debugging-port=9339",
+                "--user-data-dir=\(profileDirectory.path)",
+                "--no-first-run",
+                "--no-default-browser-check",
+                "--new-window",
+                url.absoluteString
+            ]
+            try process.run()
+            pawscriptChromeProcess = process
+            return true
+        } catch {
+            addEvent(title: "Pawscript Chrome failed", detail: error.localizedDescription)
+            return NSWorkspace.shared.open(url)
+        }
+    }
+
+    private func packageWithoutBlockingPrerequisites(_ package: PawscriptSkillPackage) -> PawscriptSkillPackage {
+        var package = package
+        if let prerequisites = package.prerequisites {
+            package.prerequisites = prerequisites.map { prerequisite in
+                var prerequisite = prerequisite
+                prerequisite.isBlocking = false
+                return prerequisite
+            }
+        }
+        return package
     }
 
     private func prerequisiteURL(for package: PawscriptSkillPackage) -> URL? {
