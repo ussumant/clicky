@@ -3,6 +3,7 @@ worker/.dev.vars
 .venv/
 __pycache__/
 *.pyc
+scripts/spanks-generated-raw/
 .DS_Store
 *.xcuserstate
 build/

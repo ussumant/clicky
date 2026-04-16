@@ -44,7 +44,12 @@ Generated finals should be saved in this directory:
 
 ## Generation Workflow
 
-The generated source images live in `GeneratedRaw/`. The app-ready strips live in this directory and are normalized by:
+Keep generated source images outside the app target at `scripts/spanks-generated-raw/`.
+Xcode's synchronized app group flattens copied resources, so keeping raw PNGs under
+`leanring-buddy/SpanksSpriteAssets/GeneratedRaw/` would collide with the app-ready
+sprite strips during build.
+
+The app-ready strips live in this directory and are normalized by:
 
 ```bash
 uv run python scripts/process_spanks_sprite_sheets.py

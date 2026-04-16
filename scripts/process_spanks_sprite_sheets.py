@@ -10,7 +10,7 @@ from PIL import Image
 
 
 ASSET_DIRECTORY = Path("leanring-buddy/SpanksSpriteAssets")
-RAW_DIRECTORY = ASSET_DIRECTORY / "GeneratedRaw"
+RAW_DIRECTORY = Path("scripts/spanks-generated-raw")
 MANIFEST_PATH = ASSET_DIRECTORY / "spanks-sprite-manifest.json"
 PREVIEW_DIRECTORY = ASSET_DIRECTORY / "Preview"
 
