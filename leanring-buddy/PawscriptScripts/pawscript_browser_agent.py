@@ -165,6 +165,58 @@ Resume context:
 """.strip()
 
 
+def first_navigate_url(payload):
+    steps = sorted(payload["skill"].get("steps") or [], key=lambda step: step.get("number", 0))
+    for step in steps:
+        if step.get("action") == "navigate":
+            return step.get("value") or step.get("target")
+    return None
+
+
+def first_blocking_prerequisite(payload):
+    for prerequisite in payload["skill"].get("prerequisites") or []:
+        if prerequisite.get("isBlocking"):
+            return prerequisite
+    return None
+
+
+async def open_page_for_handoff(browser_session, url):
+    if browser_session is None or not url:
+        return
+
+    await asyncio.wait_for(browser_session.start(), timeout=15)
+    # Creating a target opens the page without waiting on the site's DOM. That
+    # keeps the handoff snappy for sites like Paper that can stall Browser Use's
+    # readiness checks while still showing a useful visible page to the user.
+    await asyncio.wait_for(browser_session.new_page(url), timeout=10)
+
+
+async def maybe_run_prerequisite_handoff(payload, browser_session, control_dir):
+    prerequisite = first_blocking_prerequisite(payload)
+    if not prerequisite:
+        return None
+
+    url = first_navigate_url(payload)
+    message = prerequisite.get("detail") or "This workflow needs a human checkpoint before automation can continue."
+    if url:
+        message = f"{message} I opened {url}; sign in or open the editable workspace, then press Continue."
+
+    try:
+        await open_page_for_handoff(browser_session, url)
+        emit("needs_human", message)
+    except Exception as exc:
+        emit("needs_human", f"{message} I tried to open the start page, but Browser Use reported: {exc}")
+
+    signal = await wait_for_human_signal(control_dir)
+    if signal.get("action") == "stop":
+        emit("stopped", signal.get("note") or "Stopped by user.")
+        return {"stopped": True}
+
+    resume_note = signal.get("note") or "User resolved the blocker."
+    emit("resumed", resume_note)
+    return {"resume_note": resume_note, "message": message}
+
+
 async def main():
     if len(sys.argv) != 2:
         emit("error", "Usage: pawscript_browser_agent.py payload.json")
@@ -211,6 +263,16 @@ async def main():
         browser_session = BrowserSession(**browser_kwargs)
     else:
         browser_session = None
+
+    prerequisite_handoff = await maybe_run_prerequisite_handoff(payload, browser_session, control_dir)
+    if prerequisite_handoff and prerequisite_handoff.get("stopped"):
+        return 4
+    if prerequisite_handoff:
+        task = build_resume_task(
+            payload,
+            prerequisite_handoff.get("message") or "Prerequisite checkpoint",
+            prerequisite_handoff.get("resume_note") or "User resolved the blocker.",
+        )
 
     handoff_count = 0
     max_handoffs = 5
