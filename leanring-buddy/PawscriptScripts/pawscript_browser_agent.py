@@ -185,10 +185,16 @@ async def open_page_for_handoff(browser_session, url):
         return
 
     await asyncio.wait_for(browser_session.start(), timeout=15)
-    # Creating a target opens the page without waiting on the site's DOM. That
-    # keeps the handoff snappy for sites like Paper that can stall Browser Use's
-    # readiness checks while still showing a useful visible page to the user.
-    await asyncio.wait_for(browser_session.new_page(url), timeout=10)
+    page = await browser_session.get_current_page()
+    if page is None:
+        page = await asyncio.wait_for(browser_session.new_page("about:blank"), timeout=10)
+
+    await asyncio.wait_for(page.goto(url), timeout=10)
+
+    try:
+        await page.evaluate("(url) => { window.location.href = url; return window.location.href }", url)
+    except Exception:
+        pass
 
 
 async def maybe_run_prerequisite_handoff(payload, browser_session, control_dir):
