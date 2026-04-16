@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		56CF97112F90C81800B7FA2C /* File.txt in Resources */ = {isa = PBXBuildFile; fileRef = 56CF97102F90C81800B7FA2C /* File.txt */; };
-		56CF97132F90DA1A00B7FA2C /* leanring-buddy/PawscriptScripts/pawscript_browser_agent.py in Resources */ = {isa = PBXBuildFile; fileRef = 56CF97122F90DA1A00B7FA2C /* leanring-buddy/PawscriptScripts/pawscript_browser_agent.py */; };
 		AA00BB032F6500030039DA55 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = AA00BB022F6500020039DA55 /* Sparkle */; };
 		AA00BB062F6500060039DA55 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = AA00BB052F6500050039DA55 /* PostHog */; };
 /* End PBXBuildFile section */
@@ -34,8 +32,6 @@
 		28F22CBF2F56440300A0FC59 /* Clicky.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clicky.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		28F22CCC2F56440300A0FC59 /* leanring-buddyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "leanring-buddyTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		28F22CD62F56440300A0FC59 /* leanring-buddyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "leanring-buddyUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		56CF97102F90C81800B7FA2C /* File.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = File.txt; sourceTree = "<group>"; };
-		56CF97122F90DA1A00B7FA2C /* leanring-buddy/PawscriptScripts/pawscript_browser_agent.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = "leanring-buddy/PawscriptScripts/pawscript_browser_agent.py"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -86,8 +82,6 @@
 		28F22CB62F56440300A0FC59 = {
 			isa = PBXGroup;
 			children = (
-				56CF97102F90C81800B7FA2C /* File.txt */,
-				56CF97122F90DA1A00B7FA2C /* leanring-buddy/PawscriptScripts/pawscript_browser_agent.py */,
 				28F22CC12F56440300A0FC59 /* leanring-buddy */,
 				28F22CCF2F56440300A0FC59 /* leanring-buddyTests */,
 				28F22CD92F56440300A0FC59 /* leanring-buddyUITests */,
@@ -231,8 +225,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				56CF97112F90C81800B7FA2C /* File.txt in Resources */,
-				56CF97132F90DA1A00B7FA2C /* leanring-buddy/PawscriptScripts/pawscript_browser_agent.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
